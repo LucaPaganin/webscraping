@@ -63,7 +63,7 @@ COOKIES_ENABLED = False
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   "immob.pipelines.ImmobPipeline": 300,
+   "immob.pipelines.JsonWriterPipeline": 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
