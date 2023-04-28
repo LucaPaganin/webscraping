@@ -14,7 +14,10 @@
                 "immob/spiders/immobit.py"
             ],
             "cwd": "${workspaceFolder}/immob",
-            "justMyCode": false
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/"
+            }
         },
     ]
 }
