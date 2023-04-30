@@ -83,6 +83,10 @@ class ImmobItem(scrapy.Item):
         input_processor=apply_takefirst(parse_digits),
         output_processor=Join()
     )
+    posti_auto = scrapy.Field(
+        input_processor=apply_takefirst(remove_tags, defval=""),
+        output_processor=Join()
+    )
     data = scrapy.Field(
         input_processor=TakeFirst(),
         output_processor=apply_takefirst(parse_date)

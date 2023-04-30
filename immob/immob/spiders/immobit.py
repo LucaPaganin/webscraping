@@ -12,10 +12,14 @@ class ImmobitSpider(scrapy.Spider):
             'data': "Riferimento e Data annuncio",
             'stato': "stato",
             "spese_condominio": "spese condominio",
-            "numero_piani": "totale piani edificio"
+            "numero_piani": "totale piani edificio",
+            "posti_auto": "Posti Auto"
         }
         start_urls = [
-            "https://www.immobiliare.it/vendita-case/genova/con-piani-intermedi/?criterio=rilevanza&prezzoMassimo=240000&superficieMinima=60&superficieMassima=100&fasciaPiano[]=30&idMZona[]=10248&idMZona[]=10255&idMZona[]=10352&idMZona[]=10256&idMZona[]=10247&idMZona[]=10350&idQuartiere[]=10059&idQuartiere[]=11504&idQuartiere[]=10050&idQuartiere[]=10046&idQuartiere[]=13165"
+            # centro-mediolevante
+            "https://www.immobiliare.it/vendita-case/genova/con-piani-intermedi/?criterio=rilevanza&prezzoMassimo=240000&superficieMinima=60&superficieMassima=100&localiMinimo=3&noAste=1&fasciaPiano[]=30&idMZona[]=10248&idMZona[]=10255&idMZona[]=10352&idMZona[]=10256&idMZona[]=10247&idMZona[]=10350&idQuartiere[]=10059&idQuartiere[]=11504&idQuartiere[]=10050&idQuartiere[]=10046&idQuartiere[]=13165"
+            # pegli-sestri
+            # "https://www.immobiliare.it/vendita-case/genova/con-piani-intermedi/?criterio=rilevanza&prezzoMassimo=200000&superficieMinima=70&superficieMassima=90&localiMinimo=3&noAste=1&fasciaPiano[]=30&idMZona[]=10301&idMZona[]=10250"
         ]
         for url in start_urls:
             yield scrapy.Request(url=url, callback=self.parse)

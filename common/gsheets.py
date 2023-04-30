@@ -29,7 +29,7 @@ class GSheetPipeline:
         self.ids = set(self._initvalues["id"])
     
     def _get_initial_sheet_values(self):
-        self.lastcol = "Q"
+        self.lastcol = "S"
         columns = self.sheetclient.getSheetValues(
             spreadsheetId=SPREADSHEETID, 
             rangeName=f"{self.sheetname}!A1:{self.lastcol}1"
@@ -57,6 +57,7 @@ class GSheetPipeline:
         Path(f"appendvalues_{datetime.now().strftime('%Y-%m-%d')}.json").write_text(
             json.dumps(appendvalues, indent=2)
         )
+        print(f"Appending {len(appendvalues)} new rows to google sheet {SPREADSHEETID}")
         self.sheetclient.appendValuesToSheet(
             spreadsheetId=SPREADSHEETID, 
             rangeName=f"{self.sheetname}!A2:{self.lastcol}", 
