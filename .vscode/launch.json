@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: INPA",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/inpa/inpa.py",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "[scrapy-spider]: immobit",
             "type": "python",
             "request": "launch",

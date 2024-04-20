@@ -1,4 +1,9 @@
 import requests, json
+from requests.adapters import HTTPAdapter
+from urllib3.util import Retry
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 
 class INPAScraper:
@@ -23,14 +28,25 @@ class INPAScraper:
         }
         if headers:
             self.headers.update(headers)
+        self.setupHTTPSession()
     
     def setupHTTPSession(self):
-        pass
+        self.s = requests.Session()
+        self.s.headers = self.headers
+        
+        # Define the retry strategy
+        retry_strategy = Retry(
+            total=4,  # Maximum number of retries
+            status_forcelist=[429, 500, 502, 503, 504],  # HTTP status codes to retry on
+        )
+        # Create an HTTP adapter with the retry strategy and mount it to session
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.s.mount("https://", adapter)
     
-    def searchBetter(self, **kwargs):
+    def search(self, size=10, **kwargs):
         url = f"{self.baseurl}/search-better"
         payload = {
-            "text": "camera",        # testo di ricerca
+            "text": "",        # testo di ricerca
             "status": ["OPEN"],      
             "regioneId": None,       # Liguria è "8"
             "categoriaId": None,
@@ -43,28 +59,26 @@ class INPAScraper:
             "salaryMax": None
         }
         payload.update(kwargs)
+        data = []
+        exit = False
+        page = 0
+        while not exit:
+            logging.info(f"fetching results for page {page}")
+            r = self.s.post(url, json=payload, params={
+                "page": page, "size": size
+            })
+            logging.info(f"status code {r.status_code}")
+            r.raise_for_status()
+            r = r.json()
+            data.extend(r["content"])
+            page += 1
+            exit = r["last"]
+        return data
 
 
 if __name__ == '__main__':
-    pass
-
-# url di ricerca concorsi
-url = "https://portale.inpa.gov.it/concorsi-smart/api/concorso-public-area/search-better"
-
-# url singolo concorso
-# https://portale.inpa.gov.it/concorsi-smart/api/concorso-public-area/{concorsoId}
-
-
-
-r = requests.post(url, 
-                  headers=headers, 
-                  json=payload, 
-                  params={
-                      "page": 0,
-                      "size": 40
-                  })
-
-out = r.json()
-
-with open("out.json", "w") as stream:
-    json.dump(out, stream, indent=2)
+    inpa = INPAScraper()
+    results = inpa.search(regioneId="8", status=["CLOSED"])
+    with open("results.json", "w") as stream:
+        json.dump(results, stream, indent=2)
+    
