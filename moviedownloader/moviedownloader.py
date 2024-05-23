@@ -1,6 +1,6 @@
 import requests
 import logging
-import shutil
+import yaml
 from requests.adapters import HTTPAdapter, Retry
 import threading
 from pathlib import Path
@@ -8,14 +8,8 @@ from pathlib import Path
 # download from altadefinizione
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-s = requests.Session()
-retries = Retry(total=50,
-                backoff_factor=0.1,
-                status_forcelist=[500, 502, 503, 504, 400, 401, 403, 429])
 
-s.mount('https://', HTTPAdapter(max_retries=retries))
-
-def download_movie(m3u8url, outfile=None, verbose=False, addheaders=None):
+def download_movie(s, m3u8url, outfile=None, verbose=False, addheaders=None):
     # retrieve segments
     headers = {
         'Accept': '*/*',
@@ -65,10 +59,33 @@ def thread_download(*args, **kwargs):
     return th
 
 if __name__ == '__main__':
-    m3u8url = "https://hfs282.serversicuro.cc/hls/dnzpe6st2tg4a3gyvamx7lzttxr5purglohsoeluhcyd43iv54drrqvoh2mq/index-v1-a1.m3u8"
+    sep = "#"*30
+    logging.info(sep*3)
+    logging.info(f"{sep} Start movie_downloader.py {sep}")
+    logging.info(sep*3)
+    THISDIR = Path(__file__).parent
+    with open(THISDIR/"config.yaml", 'r') as stream:
+        config = yaml.safe_load(stream)
+    
+    s = requests.Session()
+    retries = Retry(total=50,
+                    backoff_factor=0.1,
+                    status_forcelist=[500, 502, 503, 504, 400, 401, 403, 429])
 
+    s.mount('https://', HTTPAdapter(max_retries=retries))
     outfolder = Path.home()/"Downloads"
-    th = thread_download(
-        m3u8url,
-        outfile=outfolder/"pippo.ts"
-    )
+    threads = []
+    for movie in config:
+        logging.info(f"Starting thread for movie {movie['title']}")
+        th = thread_download(
+            movie["m3u8url"],
+            outfile=outfolder/f'{movie["title"]}.ts'
+        )
+        threads.append(th)
+    
+    logging.info("Joining threads")
+    for th in threads:
+        th.join()
+    logging.info(sep*3)
+    logging.info(f"{sep} Finish movie_downloader.py {sep}")
+    logging.info(sep*3)
