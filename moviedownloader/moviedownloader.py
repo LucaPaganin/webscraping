@@ -59,10 +59,10 @@ def thread_download(*args, **kwargs):
     return th
 
 if __name__ == '__main__':
-    sep = "#"*30
-    logging.info(sep*3)
+    sep = "#"*15
+    logging.info(sep*4)
     logging.info(f"{sep} Start movie_downloader.py {sep}")
-    logging.info(sep*3)
+    logging.info(sep*4)
     THISDIR = Path(__file__).parent
     with open(THISDIR/"config.yaml", 'r') as stream:
         config = yaml.safe_load(stream)
@@ -75,9 +75,10 @@ if __name__ == '__main__':
     s.mount('https://', HTTPAdapter(max_retries=retries))
     outfolder = Path.home()/"Downloads"
     threads = []
-    for movie in config:
+    for movie in config['movies']:
         logging.info(f"Starting thread for movie {movie['title']}")
         th = thread_download(
+            s,
             movie["m3u8url"],
             outfile=outfolder/f'{movie["title"]}.ts'
         )
@@ -86,6 +87,6 @@ if __name__ == '__main__':
     logging.info("Joining threads")
     for th in threads:
         th.join()
-    logging.info(sep*3)
+    logging.info(sep*4)
     logging.info(f"{sep} Finish movie_downloader.py {sep}")
-    logging.info(sep*3)
+    logging.info(sep*4)

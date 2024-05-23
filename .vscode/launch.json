@@ -12,6 +12,13 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Python: movie_downloader",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/moviedownloader/moviedownloader.py",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "[scrapy-spider]: immobit",
             "type": "python",
             "request": "launch",
