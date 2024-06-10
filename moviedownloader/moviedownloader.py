@@ -26,7 +26,7 @@ def download_movie(s, m3u8url, outfile=None, verbose=False, addheaders=None):
         'User-Agent': '"Mozilla/5.0"',
         'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
         'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"macOS"'
+        'sec-ch-ua-platform': '"windows"'
     }
     if isinstance(addheaders, dict):
         headers.update(addheaders)
@@ -74,6 +74,7 @@ if __name__ == '__main__':
 
     s.mount('https://', HTTPAdapter(max_retries=retries))
     outfolder = Path.home()/"Downloads"
+    # outfolder = Path("\\\\192.168.1.1\\Shared\\Film")
     threads = []
     for movie in config['movies']:
         logging.info(f"Starting thread for movie {movie['title']}")
