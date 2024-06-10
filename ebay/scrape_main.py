@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from ebay_scraper import EbayScraper
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelName)s] %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 if __name__ == '__main__':
     what = "pkmn"
