@@ -2,8 +2,23 @@ import logging
 from datetime import datetime
 from pathlib import Path
 from ebay_scraper import EbayScraper
+import pandas as pd
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
+def scrape_ebay(urls, outfile=None, savecsv=False):
+    if outfile is None:
+        outfile = Path.home()/f"Downloads/scraping_results_{datetime.now().strftime('%Y-%m-%d')}.csv"
+    scraper = EbayScraper()
+    dfs = []
+    for url in urls:
+        data = scraper.navigatePages(url)
+        dfs.append(data)
+    fulldata = pd.concat(dfs).reset_index()
+    if savecsv:
+        fulldata.to_csv(outfile, index=False)
+    return fulldata
+    
 
 if __name__ == '__main__':
     what = "pkmn"
