@@ -38,9 +38,9 @@ def download_movie(s, m3u8url, outfile=None, verbose=False, addheaders=None):
     if outfile is None:
         outfile = "/Users/lucapaganin/Downloads/mymovie.mp4"
     with open(outfile, mode) as stream:
-        for seg in segments:
+        for i, seg in enumerate(segments):
             if verbose:
-                logging.info(f"Processing seg {seg}")
+                logging.info(f"Processing seg {seg} {i+1}/{len(segments)}")
             url = base_url + f"/{seg}"
             r = s.get(url, headers=headers)
             if r.status_code == 200:

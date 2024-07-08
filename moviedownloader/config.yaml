@@ -1,7 +1,3 @@
 movies:
-# - title: 've ne dovete andare'
-#   m3u8url: ''
-- title: 'mangia_prega_ama'
-  m3u8url: 'https://hfs280.serversicuro.cc/hls/dnzpf76a3pg4a3gyva5h7lzrqtx577y643vjd24xzbdshumd6kxwg2xfavwa/index-v1-a1.m3u8'
-# - title: 'prisoners'
-#   m3u8url: 'https://hfs264.serversicuro.cc/hls/dnzpevi33pg4a3gyvddx72dqsbpknu675cb5kvswabrlmxtpwxh4imzusq7a/index-v1-a1.m3u8'
+- title: 'inside_out_2'
+  m3u8url: 'https://hfs260.serversicuro.cc/hls/dnzpfo3c3pg4a3gyvdjx72buq7gjonukprkh35okhphidtlykn2morkurwua/index-v1-a1.m3u8'
