@@ -26,6 +26,17 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Python: ryanair",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/ryanair/price_monitor/price_monitor.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/ryanair"
+            }
+        },
+        {
             "name": "[scrapy-spider]: immobit",
             "type": "python",
             "request": "launch",
