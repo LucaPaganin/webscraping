@@ -1,0 +1,1 @@
+from .price_monitor import FlightPriceMonitor

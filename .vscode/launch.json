@@ -26,15 +26,15 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Python: ryanair",
+            "name": "Python: ryanair flight monitor",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/ryanair/price_monitor/price_monitor.py",
+            "program": "${workspaceFolder}/ryanair/monitor_main.py",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}/ryanair"
-            }
+            // "env": {
+            //     "PYTHONPATH": "${workspaceFolder}/ryanair"
+            // }
         },
         {
             "name": "[scrapy-spider]: immobit",
