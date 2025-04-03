@@ -56,13 +56,15 @@ class EbayScraper:
             price = item.find_element(By.CSS_SELECTOR, "span.s-item__price")
             subtitle = item.find_element(By.CSS_SELECTOR, "div.s-item__subtitle")
             title = item.find_element(By.CSS_SELECTOR, "div.s-item__title")
+            seller = item.find_element(By.CSS_SELECTOR, "span.s-item__seller-info-text")
             
             if price and price.text:
                 data = {
                     "link": link.get_attribute("href"),
                     "price": price.text,
                     "title": title.text,
-                    "subtitle": subtitle.text
+                    "subtitle": subtitle.text,
+                    "seller": seller.text if seller else None,
                 }
                 outdata.append(data)
         logger.info(f"Finished processign page elements")

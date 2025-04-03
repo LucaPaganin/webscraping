@@ -26,6 +26,17 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Streamlit: python ebay scraper",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/.venv/Scripts/streamlit.exe",
+            "args": [
+                "run",
+                "${workspaceFolder}/ebay/streamlit_scraper.py"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Python: ryanair flight monitor",
             "type": "debugpy",
             "request": "launch",
