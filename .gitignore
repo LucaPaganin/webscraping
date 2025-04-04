@@ -3,6 +3,7 @@
 appendvalues*.json
 items.jsonl
 .DS_Store
+ebay_results
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

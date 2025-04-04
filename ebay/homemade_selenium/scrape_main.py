@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from ebay_scraper import EbayScraper
+from ebay.selenium_ebay_scraper import EbayScraper
 import pandas as pd
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
