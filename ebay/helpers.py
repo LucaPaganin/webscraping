@@ -11,6 +11,17 @@ from pathlib import Path # To handle file paths robustly
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import logging # Importa il modulo logging
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
+import pandas as pd
+import time
+import random
 
 # --- Configuration ---
 # Fallback User Agents in case fake-useragent fails
@@ -27,6 +38,7 @@ FALLBACK_USER_AGENTS = [
 # Try to import fake_useragent, use fallback if it fails
 try:
     from fake_useragent import UserAgent
+
     ua = UserAgent()
     def get_user_agent():
         try:
@@ -143,7 +155,7 @@ def create_session_with_retries(
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
         'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
         'Accept-Encoding': 'gzip, deflate, br',
-        'Referer': 'https://www.ebay.it/', # Adatta questo!
+        'Referer': 'https://www.google.com/', # Adatta questo!
         'Upgrade-Insecure-Requests': '1',
         'Connection': 'keep-alive',
         'DNT': '1',
@@ -243,7 +255,7 @@ def scrape_ebay_page(session: requests.Session, url: str) -> tuple:
 def run_ebay_scraper(query, max_pages, force_rerun=False):
     """Runs the scraper for the given query and number of pages."""
     sanitized_query = "".join(c if c.isalnum() else "_" for c in query)
-    filename = SAVE_DIR / f"{sanitized_query}.csv"
+    filename = SAVE_DIR / f"ebay_{sanitized_query}.csv"
 
     if not force_rerun and filename.exists():
         st.info(f"File '{filename}' già esistente. Caricamento dati esistenti...")
@@ -326,3 +338,128 @@ def run_ebay_scraper(query, max_pages, force_rerun=False):
         # Still return the dataframe for display if saving failed
     return df
 
+
+def run_vinted_scraper(query, max_pages, force_rerun=False):
+    """
+    Scrapes search results from vinted.com for a given query using Selenium and returns a DataFrame.
+    """
+
+    # Sanitize query and define the output file path
+    sanitized_query = "".join(c if c.isalnum() else "_" for c in query)
+    output_file = SAVE_DIR / f"vinted_{sanitized_query}.csv"
+
+    # Check if the file already exists and skip scraping if not forced
+    if not force_rerun and output_file.exists():
+        logging.info(f"File '{output_file}' already exists. Loading existing data...")
+        try:
+            df = pd.read_csv(output_file)
+            if 'Prezzo' in df.columns:
+                df['Prezzo'] = pd.to_numeric(df['Prezzo'], errors='coerce')
+                df.dropna(subset=['Prezzo'], inplace=True)
+            return df
+        except Exception as e:
+            logging.error(f"Error loading existing file '{output_file}': {e}")
+            logging.warning("Proceeding with a new scrape.")
+
+    # Configure Selenium WebDriver
+    chrome_options = Options()
+    # Remove headless mode to see the browser
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+
+    driver = webdriver.Chrome(options=chrome_options)
+    base_url = "https://www.vinted.it"
+    search_url = f"{base_url}/catalog?search_text={query.replace(' ', '+')}"
+    results = []
+
+    try:
+        for page in range(1, max_pages + 1):
+            url = f"{search_url}&page={page}"
+            driver.get(url)
+            
+            # Close the cookie banner if present
+            try:
+                cookie_reject_button = WebDriverWait(driver, 5).until(
+                    EC.element_to_be_clickable((By.ID, "onetrust-reject-all-handler"))
+                )
+                cookie_reject_button.click()
+                logging.info("Cookie banner closed successfully.")
+            except TimeoutException:
+                logging.info("Cookie banner not found or already closed.")
+
+            try:
+                # Wait for the items to load
+                WebDriverWait(driver, 10).until(
+                    EC.presence_of_all_elements_located((By.CLASS_NAME, "feed-grid__item"))
+                )
+            except TimeoutException:
+                logging.warning(f"Timeout while waiting for items on page {page}. Stopping.")
+                break
+
+            items = driver.find_elements(By.CLASS_NAME, "feed-grid__item")
+            if not items:
+                logging.info(f"No more items found on page {page}. Stopping.")
+                break
+
+            for item in items:
+                try:
+                    link_element = item.find_element(By.CSS_SELECTOR, ".new-item-box__image-container > a")
+                    href = link_element.get_attribute("href")
+                    # Extract title, brand, condition, price, and shipping info from the title attribute
+                    textdata = link_element.get_attribute("title")
+                    
+                    try:
+                        *title_parts, brand, condition, price, price_with_shipping = [
+                            p.strip() for p in textdata.split(",") if p.strip()
+                        ]
+                        title = ",".join(title_parts).strip()
+                        brand = brand.split(":")[1].strip() if ":" in brand else brand.strip()
+                        condition = condition.split(":")[1].strip() if ":" in condition else condition.strip()
+                        
+                        price_shipping, notes = price_with_shipping.split(" ", maxsplit=1)
+                    except Exception as e:
+                        logging.error(f"Error parsing item textdata: {textdata} - {e}")
+                        continue
+                    
+                    price = price.replace("€", "").replace(",", ".").strip()
+                    price_shipping = price_shipping.replace("€", "").replace(",", ".").strip()
+                    
+                    try:
+                        price = float(price) if price else None
+                        price_shipping = float(price_shipping) if price_shipping else None
+                    except ValueError:
+                        pass
+
+                    # Append the extracted data to results
+                    results.append({
+                        "Titolo": title,
+                        "Brand": brand,
+                        "Condizione": condition,
+                        "Prezzo": price,
+                        "Prezzo con spedizione": price_shipping,
+                        "Link": href,
+                        "Note": notes,
+                    })
+                except NoSuchElementException as e:
+                    logging.error(f"Error parsing item: {e}")
+
+            # Politeness delay
+            time.sleep(random.uniform(2, 5))
+
+    except Exception as e:
+        logging.error(f"Unexpected error during scraping: {e}")
+    finally:
+        driver.quit()
+
+    # Convert results to DataFrame    
+    df = pd.DataFrame(results)
+    if not df.empty:
+        # Save to CSV
+        try:
+            df.to_csv(output_file, index=False)
+            logging.info(f"Data saved successfully to '{output_file}'")
+        except Exception as e:
+            logging.error(f"Failed to save data to '{output_file}': {e}")
+
+    return df

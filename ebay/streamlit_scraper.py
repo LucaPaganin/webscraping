@@ -3,37 +3,39 @@ import pandas as pd
 import plotly.express as px
 import re # Import regular expression library for price cleaning
 import logging # Importa il modulo logging
-from helpers import run_ebay_scraper
+from helpers import run_ebay_scraper, run_vinted_scraper # Importa le funzioni di scraping da helpers.py
+import os
+import requests
+from bs4 import BeautifulSoup
 
 
-
-# --- Multi-page Setup with Streamlit Pages Dropdown ---
-st.set_page_config(layout="wide")  # Use wider layout
-st.sidebar.title("Navigazione")
-page = st.sidebar.selectbox("Seleziona una pagina:", ["🔍 Scraping e Analisi", "📊 Analisi e Filtri", "🤖 Chatbot"])
-
-def scraping_and_analysis_page():
+def scraping_page():
     """Page logic for Scraping and Analysis."""
     st.header("🔍 Scraping e Analisi")
-    st.title("📊 Web Scraper eBay & Analisi Prezzi")
+    st.title("📊 Web Scraper & Analisi Prezzi")
     st.markdown("""
-    Questa applicazione effettua lo scraping dei risultati di ricerca da **eBay.it** per una data query,
+    Questa applicazione effettua lo scraping dei risultati di ricerca da vari siti web,
     salva i dati in un file CSV e visualizza un'analisi dei prezzi.
     """)
 
     # --- Input Section ---
-    query = st.text_input("Inserisci la query di ricerca per eBay:", placeholder="Es: scheda video nvidia")
+    website = st.selectbox("Seleziona il sito web da cui effettuare lo scraping:", ["eBay", "Vinted"])
+    query = st.text_input("Inserisci la query di ricerca:", placeholder="Es: scheda video nvidia")
     max_pages_to_scrape = st.slider("Numero massimo di pagine da analizzare:", min_value=1, max_value=100, value=10, step=1,
                                     help="Imposta quante pagine di risultati vuoi analizzare. Più pagine richiedono più tempo.")
     start_button = st.button("Avvia Ricerca / Carica Dati")
     force_rerun = st.checkbox("Forza nuovo scraping anche se il file esiste", value=False, 
                               help="Seleziona per forzare un nuovo scraping anche se il file CSV esiste già.")
+
     if start_button and query:
-        with st.spinner(f"Elaborazione per '{query}'... Attendere prego."):
-            results_df = run_ebay_scraper(query, max_pages_to_scrape, force_rerun)
+        with st.spinner(f"Elaborazione per '{query}' su {website}... Attendere prego."):
+            if website == "eBay":
+                results_df = run_ebay_scraper(query, max_pages_to_scrape, force_rerun)
+            elif website == "Vinted":
+                results_df = run_vinted_scraper(query, max_pages_to_scrape, force_rerun)
 
         if results_df is not None and not results_df.empty:
-            st.subheader(f"📈 Analisi dei Prezzi per '{query}'")
+            st.subheader(f"📈 Analisi dei Prezzi per '{query}' su {website}")
             if 'Prezzo' in results_df.columns and pd.api.types.is_numeric_dtype(results_df['Prezzo']) and results_df['Prezzo'].notna().sum() > 0:
                 mean_price = results_df['Prezzo'].mean()
                 max_price = results_df['Prezzo'].max()
@@ -48,7 +50,7 @@ def scraping_and_analysis_page():
                 st.metric("Prezzo Massimo", f"€ {max_price:,.2f}")
 
                 fig = px.histogram(results_df, x='Prezzo', nbins=30,
-                                    title=f"Distribuzione dei Prezzi per '{query}'",
+                                    title=f"Distribuzione dei Prezzi per '{query}' su {website}",
                                     labels={'Prezzo': 'Prezzo (€)'},
                                     opacity=0.8,
                                     color_discrete_sequence=px.colors.qualitative.Pastel)
@@ -66,7 +68,7 @@ def scraping_and_analysis_page():
             else:
                 st.warning("La colonna 'Prezzo' non è presente, non è numerica o non contiene dati validi per generare il grafico.")
 
-            st.subheader(f"📄 Tabella dei Risultati per '{query}'")
+            st.subheader(f"📄 Tabella dei Risultati per '{query}' su {website}")
             results_df_display = results_df.copy()
             if 'Prezzo' in results_df_display.columns:
                 results_df_display['Prezzo'] = results_df_display['Prezzo'].apply(lambda x: f"€ {x:,.2f}" if pd.notna(x) else "N/D")
@@ -210,10 +212,19 @@ def chatbot_page():
     st.header("🤖 Chatbot")
     st.write("Questa pagina è in fase di sviluppo. Prossimamente sarà disponibile un chatbot interattivo.")
 
+PAGES = {
+    "🔍 Scraping e Analisi": scraping_page,
+    "📊 Analisi e Filtri": analysis_and_filters_page,
+    "🤖 Chatbot": chatbot_page
+}
+
+# --- Multi-page Setup with Streamlit Pages Dropdown ---
+st.set_page_config(layout="wide")  # Use wider layout
+st.sidebar.title("Navigazione")
+page = st.sidebar.selectbox("Seleziona una pagina:", PAGES.keys())
+st.sidebar.markdown("---")
+
 # --- Page Routing ---
-if page == "Scraping e Analisi":
-    scraping_and_analysis_page()
-elif page == "Analisi e Filtri":
-    analysis_and_filters_page()
-elif page == "Chatbot":
-    chatbot_page()
+selected_page = PAGES[page]
+selected_page()
+
