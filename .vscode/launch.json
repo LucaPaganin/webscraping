@@ -26,7 +26,7 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Streamlit: python ebay scraper",
+            "name": "Streamlit: ebay/vinted scraper",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/.venv/Scripts/streamlit.exe",

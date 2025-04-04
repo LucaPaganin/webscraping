@@ -23,6 +23,11 @@ import pandas as pd
 import time
 import random
 
+from langdetect import detect, DetectorFactory
+from langdetect.lang_detect_exception import LangDetectException
+
+
+
 # --- Configuration ---
 # Fallback User Agents in case fake-useragent fails
 FALLBACK_USER_AGENTS = [
@@ -59,6 +64,16 @@ SAVE_DIR.mkdir(exist_ok=True) # Create directory if it doesn't exist
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__) # Ottieni un logger per questo modulo
+
+# Rendi la rilevazione linguistica deterministica
+DetectorFactory.seed = 42
+
+# Funzione per rilevare la lingua
+def detect_language(text):
+    try:
+        return detect(text)
+    except LangDetectException:
+        return None
 
 # --- Functions ---
 def extract_keywords(input_string):
@@ -256,30 +271,17 @@ def scrape_ebay_page(session: requests.Session, url: str) -> tuple:
         return listings_data, None # Return collected data so far
 
 
-def run_ebay_scraper(query, max_pages, force_rerun=False):
+def run_ebay_scraper(query, max_pages, start_search_url=None):
     """Runs the scraper for the given query and number of pages."""
-    sanitized_query = "".join(c if c.isalnum() else "_" for c in query)
-    filename = SAVE_DIR / f"ebay_{sanitized_query}.csv"
-
-    if not force_rerun and filename.exists():
-        st.info(f"File '{filename}' già esistente. Caricamento dati esistenti...")
-        try:
-            df = pd.read_csv(filename)
-            # Ensure Price column is numeric after loading
-            if 'Prezzo' in df.columns:
-                df['Prezzo'] = pd.to_numeric(df['Prezzo'], errors='coerce')
-                df.dropna(subset=['Prezzo'], inplace=True) # Remove rows where price couldn't be converted
-            return df
-        except Exception as e:
-            st.error(f"Errore nel caricamento o elaborazione del file CSV '{filename}': {e}")
-            st.warning("Procedo con un nuovo scraping.")
-            # If loading fails, proceed to scrape anew, potentially overwriting later
 
     all_listings = []
-    # Replace spaces with '+' for the URL query parameter
-    search_query_url = query.replace(' ', '+')
-    # Construct initial URL for eBay Italy (ebay.it)
-    current_url = f"https://www.ebay.it/sch/i.html?_nkw={search_query_url}"
+    if start_search_url:
+        current_url = start_search_url
+    else:
+        # Replace spaces with '+' for the URL query parameter
+        search_query_url = query.replace(' ', '+')
+        # Construct initial URL for eBay Italy (ebay.it)
+        current_url = f"https://www.ebay.it/sch/i.html?_nkw={search_query_url}"
 
     st.write(f"Inizio scraping per '{query}'...")
     progress_bar = st.progress(0)
@@ -334,36 +336,13 @@ def run_ebay_scraper(query, max_pages, force_rerun=False):
         st.warning("Nessun dato valido con prezzo numerico trovato dopo la pulizia.")
         return None
 
-    try:
-        df.to_csv(filename, index=False)
-        st.success(f"Dati salvati con successo in '{filename}'")
-    except Exception as e:
-        st.error(f"Impossibile salvare il file CSV '{filename}': {e}")
-        # Still return the dataframe for display if saving failed
     return df
 
 
-def run_vinted_scraper(query, max_pages, force_rerun=False):
+def run_vinted_scraper(query, max_pages, start_search_url=None):
     """
     Scrapes search results from vinted.com for a given query using Selenium and returns a DataFrame.
     """
-
-    # Sanitize query and define the output file path
-    sanitized_query = "".join(c if c.isalnum() else "_" for c in query)
-    output_file = SAVE_DIR / f"vinted_{sanitized_query}.csv"
-
-    # Check if the file already exists and skip scraping if not forced
-    if not force_rerun and output_file.exists():
-        logging.info(f"File '{output_file}' already exists. Loading existing data...")
-        try:
-            df = pd.read_csv(output_file)
-            if 'Prezzo' in df.columns:
-                df['Prezzo'] = pd.to_numeric(df['Prezzo'], errors='coerce')
-                df.dropna(subset=['Prezzo'], inplace=True)
-            return df
-        except Exception as e:
-            logging.error(f"Error loading existing file '{output_file}': {e}")
-            logging.warning("Proceeding with a new scrape.")
 
     # Configure Selenium WebDriver
     chrome_options = Options()
@@ -373,8 +352,12 @@ def run_vinted_scraper(query, max_pages, force_rerun=False):
     chrome_options.add_argument("--disable-dev-shm-usage")
 
     driver = webdriver.Chrome(options=chrome_options)
-    base_url = "https://www.vinted.it"
-    search_url = f"{base_url}/catalog?search_text={query.replace(' ', '+')}"
+    if not start_search_url:
+        base_url = "https://www.vinted.it"
+        search_url = f"{base_url}/catalog?search_text={query.replace(' ', '+')}"
+    else:
+        search_url = start_search_url
+    
     results = []
 
     try:
@@ -415,19 +398,23 @@ def run_vinted_scraper(query, max_pages, force_rerun=False):
                     
                     try:
                         *title_parts, brand, condition, price, price_with_shipping = [
-                            p.strip() for p in textdata.split(",") if p.strip()
+                            p.strip() for p in textdata.split(", ") if p.strip()
                         ]
                         title = ",".join(title_parts).strip()
                         brand = brand.split(":")[1].strip() if ":" in brand else brand.strip()
                         condition = condition.split(":")[1].strip() if ":" in condition else condition.strip()
+                        
+                        # default for title value
+                        if not title and brand:
+                            title = brand
                         
                         price_shipping, notes = price_with_shipping.split(" ", maxsplit=1)
                     except Exception as e:
                         logging.error(f"Error parsing item textdata: {textdata} - {e}")
                         continue
                     
-                    price = price.replace("€", "").replace(",", ".").strip()
-                    price_shipping = price_shipping.replace("€", "").replace(",", ".").strip()
+                    price = price.replace("€", "").replace(",", "").strip()
+                    price_shipping = price_shipping.replace("€", "").replace(",", "").strip()
                     
                     try:
                         price = float(price) if price else None
@@ -458,12 +445,5 @@ def run_vinted_scraper(query, max_pages, force_rerun=False):
 
     # Convert results to DataFrame    
     df = pd.DataFrame(results)
-    if not df.empty:
-        # Save to CSV
-        try:
-            df.to_csv(output_file, index=False)
-            logging.info(f"Data saved successfully to '{output_file}'")
-        except Exception as e:
-            logging.error(f"Failed to save data to '{output_file}': {e}")
 
     return df
