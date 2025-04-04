@@ -314,8 +314,8 @@ def run_scraper(query, max_pages, force_rerun=False):
     df.dropna(subset=['Prezzo'], inplace=True) # Remove rows if price is invalid after all
 
     if df.empty:
-         st.warning("Nessun dato valido con prezzo numerico trovato dopo la pulizia.")
-         return None
+        st.warning("Nessun dato valido con prezzo numerico trovato dopo la pulizia.")
+        return None
 
     try:
         df.to_csv(filename, index=False)
@@ -326,15 +326,14 @@ def run_scraper(query, max_pages, force_rerun=False):
     return df
 
 
-# --- Multi-page Setup ---
-st.set_page_config(layout="wide") # Use wider layout
+# --- Multi-page Setup with Streamlit Pages Dropdown ---
+st.set_page_config(layout="wide")  # Use wider layout
 st.sidebar.title("Navigazione")
-page = st.sidebar.radio("Seleziona una pagina:", ["Scraping e Analisi", "Analisi e Filtri"])
+page = st.sidebar.selectbox("Seleziona una pagina:", ["Scraping e Analisi", "Analisi e Filtri", "Chatbot"])
 
-if page == "Scraping e Analisi":
-    # --- Scraping Page ---
+def scraping_and_analysis_page():
+    """Page logic for Scraping and Analysis."""
     st.header("🔍 Scraping e Analisi")
-    
     st.title("📊 Web Scraper eBay & Analisi Prezzi")
     st.markdown("""
     Questa applicazione effettua lo scraping dei risultati di ricerca da **eBay.it** per una data query,
@@ -350,30 +349,7 @@ if page == "Scraping e Analisi":
                               help="Seleziona per forzare un nuovo scraping anche se il file CSV esiste già.")
     if start_button and query:
         with st.spinner(f"Elaborazione per '{query}'... Attendere prego."):
-            sanitized_query = "".join(c if c.isalnum() else "_" for c in query)
-            filename = SAVE_DIR / f"{sanitized_query}.csv"
-
-            results_df = None
-            if not force_rerun and filename.exists():
-                st.info(f"File '{filename}' già esistente. Caricamento dati...")
-                try:
-                    results_df = pd.read_csv(filename)
-                    if 'Prezzo' in results_df.columns:
-                        results_df['Prezzo'] = pd.to_numeric(results_df['Prezzo'], errors='coerce')
-                        results_df.dropna(subset=['Prezzo'], inplace=True)
-                    if results_df.empty:
-                        st.warning(f"Il file CSV '{filename}' è vuoto o non contiene prezzi validi. Avvio un nuovo scraping.")
-                        results_df = run_scraper(query, max_pages_to_scrape)
-                    else:
-                        st.success(f"Dati caricati da '{filename}'.")
-                except pd.errors.EmptyDataError:
-                    st.warning(f"Il file CSV '{filename}' è vuoto. Avvio un nuovo scraping.")
-                    results_df = run_scraper(query, max_pages_to_scrape)
-                except Exception as e:
-                    st.error(f"Errore nel caricamento del file CSV '{filename}': {e}. Avvio un nuovo scraping.")
-                    results_df = run_scraper(query, max_pages_to_scrape)
-            else:
-                results_df = run_scraper(query, max_pages_to_scrape, force_rerun)
+            results_df = run_scraper(query, max_pages_to_scrape, force_rerun)
 
         if results_df is not None and not results_df.empty:
             st.subheader(f"📈 Analisi dei Prezzi per '{query}'")
@@ -419,8 +395,8 @@ if page == "Scraping e Analisi":
     elif start_button and not query:
         st.warning("Per favore, inserisci una query di ricerca.")
 
-elif page == "Analisi e Filtri":
-    # --- Analysis and Filters Page ---
+def analysis_and_filters_page():
+    """Page logic for Analysis and Filters."""
     st.header("📂 Analisi e Filtri")
     uploaded_file = st.file_uploader("Carica un file CSV con i dati da analizzare:", type=["csv"])
     if uploaded_file:
@@ -547,3 +523,16 @@ elif page == "Analisi e Filtri":
             
         except Exception as e:
             st.error(f"Errore durante il caricamento o l'elaborazione del file: {e}")
+
+def chatbot_page():
+    """Placeholder for Chatbot page."""
+    st.header("🤖 Chatbot")
+    st.write("Questa pagina è in fase di sviluppo. Prossimamente sarà disponibile un chatbot interattivo.")
+
+# --- Page Routing ---
+if page == "Scraping e Analisi":
+    scraping_and_analysis_page()
+elif page == "Analisi e Filtri":
+    analysis_and_filters_page()
+elif page == "Chatbot":
+    chatbot_page()
