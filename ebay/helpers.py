@@ -380,6 +380,15 @@ def run_vinted_scraper(query, max_pages, start_search_url=None):
                 WebDriverWait(driver, 10).until(
                     EC.presence_of_all_elements_located((By.CLASS_NAME, "feed-grid__item"))
                 )
+                # Wait for the favorite button elements to be clickable
+                try:
+                    WebDriverWait(driver, 10).until(
+                        EC.element_to_be_clickable((By.CSS_SELECTOR, "button.u-background-white.new-item-box__favourite-icon"))
+                    )
+                    logging.info("Favorite button elements are clickable.")
+                except TimeoutException:
+                    logging.warning("Timeout while waiting for favorite button elements to be clickable.")
+                
             except TimeoutException:
                 logging.warning(f"Timeout while waiting for items on page {page}. Stopping.")
                 break
@@ -421,6 +430,22 @@ def run_vinted_scraper(query, max_pages, start_search_url=None):
                         price_shipping = float(price_shipping) if price_shipping else None
                     except ValueError:
                         pass
+                    
+                    # try to retrieve the number of favorites
+                    num_favorites = None
+                    try:
+                        fav_element = item.find_element(
+                            By.CSS_SELECTOR, 
+                            'button.u-background-white.new-item-box__favourite-icon span[class^="web_ui__Text"]'
+                        )
+                        if fav_element:
+                            num_favorites = fav_element.text.strip()
+                            try:
+                                num_favorites = int(num_favorites.replace(" ", ""))
+                            except ValueError:
+                                pass
+                    except NoSuchElementException:
+                        logging.warning("No favorites element found.")
 
                     # Append the extracted data to results
                     results.append({
@@ -428,6 +453,7 @@ def run_vinted_scraper(query, max_pages, start_search_url=None):
                         "Brand": brand,
                         "Condizione": condition,
                         "Prezzo": price,
+                        "Preferiti": num_favorites,
                         "Prezzo con spedizione": price_shipping,
                         "Link": href,
                         "Note": notes,
