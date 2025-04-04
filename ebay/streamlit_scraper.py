@@ -3,7 +3,11 @@ import pandas as pd
 import plotly.express as px
 import re # Import regular expression library for price cleaning
 import logging # Importa il modulo logging
-from helpers import run_ebay_scraper, run_vinted_scraper # Importa le funzioni di scraping da helpers.py
+from helpers import (
+    run_ebay_scraper, 
+    run_vinted_scraper,
+    extract_keywords
+)
 import os
 import requests
 from bs4 import BeautifulSoup
@@ -78,10 +82,131 @@ def scraping_page():
     elif start_button and not query:
         st.warning("Per favore, inserisci una query di ricerca.")
 
+
+def filter_analysis_subpage(df: pd.DataFrame, data_source: str):
+    """Subpage logic for eBay Analysis."""
+    st.subheader(f"🔍 Analisi dati estratti da {data_source}")
+    st.write(f"Questa sezione è dedicata all'analisi dei dati estratti da {data_source}.")
+    st.write(f"Numero di record caricati: {len(df)}")
+    if data_source == "eBay":    
+        # Extract the last part of the URL before the query string and create a new column 'id_inserzione'
+        df['id_inserzione'] = df['Link'].apply(lambda x: x.split('?')[0].split('/')[-1] if isinstance(x, str) else None)
+        # Drop duplicates based on the 'id_inserzione' column
+        df.drop_duplicates(subset=['id_inserzione'], inplace=True)
+        filter_columns = ["Titolo", "Sottotitolo"]
+    elif data_source == "Vinted":
+        # Drop duplicates based on the 'id_inserzione' column
+        df.drop_duplicates(subset=['Link'], inplace=True)
+        filter_columns = ["Titolo", "Brand", "Condizione"]
+    
+    st.markdown(f"**Dati unici dopo rimozione duplicati:** {len(df)} record")
+    st.subheader(f"📄 Tabella dei Dati Caricati: {len(df)} record")
+
+    st.dataframe(df, use_container_width=True, hide_index=True)
+    
+    min_price = float(df['Prezzo'].min())
+    max_price = float(df['Prezzo'].max())
+
+    st.subheader("📊 Filtri e Grafici")
+    st.write("Applica filtri per analizzare i dati in modo più dettagliato.")
+    st.write("Puoi filtrare per prezzo, parole chiave nel titolo e altre caratteristiche.")
+    
+    min_price, max_price = st.slider(
+        "Filtra per Prezzo (€):", 
+        min_value=min_price, 
+        max_value=max_price, 
+        value=(min_price, max_price),
+        step=1.0
+    )
+    
+    df = df[(df['Prezzo'] >= min_price) & (df['Prezzo'] <= max_price)]
+    
+    # Display minimum and maximum price metrics
+    st.metric("Prezzo Minimo Filtrato", f"€ {min_price:,.2f}")
+    st.metric("Prezzo Massimo Filtrato", f"€ {max_price:,.2f}")
+    
+    return filter_dataframe_by_keywords(df, filter_columns)
+
+def filter_dataframe_by_keywords(df: pd.DataFrame, filter_columns) -> pd.DataFrame:
+    """Filter DataFrame by keywords in string columns."""
+
+    filter_inputs = {}
+    for column in filter_columns:
+        col1, col2 = st.columns(2)
+        with col1:
+            keyword_filter = st.text_input(
+                f"Filtra per Parole Chiave in **{column}**:", 
+                placeholder="Inserisci una o più parole chiave separate da spazi",
+                key=f"keyword_filter_{column}"
+            )
+            filt_type = st.radio(
+                f"Tipo di filtro per **{column}**:",
+                options=["And", "Or"],
+                key=f"include_filter_type_{column}",
+            )
+            filter_inputs[f"{column}_include"] = {
+                "keywords": keyword_filter,
+                "type": filt_type
+            }
+        
+        with col2:
+            exclude_keyword_filter = st.text_input(
+                f"Escludi Parole Chiave in **{column}**:", 
+                placeholder="Inserisci una o più parole chiave separate da spazi",
+                key=f"exclude_keyword_filter_{column}"
+            )
+            
+            filt_type = st.radio(
+                f"Tipo di filtro per **{column}**:",
+                options=["And", "Or"],
+                key=f"exclude_filter_type_{column}",
+            )
+            filter_inputs[f"{column}_exclude"] = {
+                "keywords": exclude_keyword_filter,
+                "type": filt_type
+            }
+
+    # Applica i filtri al dataframe
+    filtered_df = df.copy()
+    for column in filter_columns:
+        include_keywords = extract_keywords(filter_inputs[f"{column}_include"]["keywords"])
+        exclude_keywords = extract_keywords(filter_inputs[f"{column}_exclude"]["keywords"])
+        
+        if include_keywords:
+            if filter_inputs[f"{column}_include"]["type"] == "And":
+                filtered_df = filtered_df[
+                    filtered_df[column].str.lower().apply(
+                        lambda value: all(keyword in value for keyword in include_keywords) if isinstance(value, str) else False
+                    )
+                ]
+            else:
+                filtered_df = filtered_df[
+                    filtered_df[column].str.lower().apply(
+                        lambda value: any(keyword in value for keyword in include_keywords) if isinstance(value, str) else False
+                    )
+                ]
+        if exclude_keywords:
+            if filter_inputs[f"{column}_exclude"]["type"] == "And":
+                filtered_df = filtered_df[
+                    filtered_df[column].str.lower().apply(
+                        lambda value: not any(keyword in value for keyword in exclude_keywords) if isinstance(value, str) else True
+                    )
+                ]
+            else:
+                filtered_df = filtered_df[
+                    filtered_df[column].str.lower().apply(
+                        lambda value: not all(keyword in value for keyword in exclude_keywords) if isinstance(value, str) else True
+                    )
+                ]
+
+    return filtered_df
+    
+
 def analysis_and_filters_page():
     """Page logic for Analysis and Filters."""
     st.header("📂 Analisi e Filtri")
     uploaded_file = st.file_uploader("Carica un file CSV con i dati da analizzare:", type=["csv"])
+    data_source = st.selectbox("Seleziona l'origine dei dati:", ["eBay", "Vinted"], help="Scegli l'origine dei dati per l'analisi.")
     if uploaded_file:
         try:
             df = pd.read_csv(uploaded_file)
@@ -90,91 +215,9 @@ def analysis_and_filters_page():
                 df.dropna(subset=['Prezzo'], inplace=True)
             st.success("File caricato con successo!")
             
-            # Extract the last part of the URL before the query string and create a new column 'id_inserzione'
-            df['id_inserzione'] = df['Link'].apply(lambda x: x.split('?')[0].split('/')[-1] if isinstance(x, str) else None)
-
-            # Drop duplicates based on the 'id_inserzione' column
-            df.drop_duplicates(subset=['id_inserzione'], inplace=True)
-            st.markdown(f"**Dati unici dopo rimozione duplicati:** {len(df)} record")
-            st.subheader(f"📄 Tabella dei Dati Caricati: {len(df)} record")
-            st.dataframe(df, use_container_width=True, hide_index=True)
+            filtered_df = filter_analysis_subpage(df, data_source)
             
-            min_price = float(df['Prezzo'].min())
-            max_price = float(df['Prezzo'].max())
-
-            st.subheader("📊 Filtri e Grafici")
-            st.write("Applica filtri per analizzare i dati in modo più dettagliato.")
-            st.write("Puoi filtrare per prezzo, parole chiave nel titolo e altre caratteristiche.")
             
-            min_price, max_price = st.slider(
-                "Filtra per Prezzo (€):", 
-                min_value=min_price, 
-                max_value=max_price, 
-                value=(min_price, max_price),
-                step=1.0
-            )
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown("Filtri per Parole Chiave nel **Titolo**:")
-                keyword_filter = st.text_input(
-                    "Filtra per Parole Chiave nel Titolo:", 
-                    placeholder="Inserisci una o più parole chiave separate da spazi"
-                )
-                exclude_keyword_filter = st.text_input(
-                    "Escludi Parole Chiave nel Titolo:", 
-                    placeholder="Inserisci una o più parole chiave separate da spazi"
-                )
-            
-            with col2:
-                st.markdown("Filtri per Parole Chiave nel **Sottotitolo**:")
-                subtitle_keyword_filter = st.text_input(
-                    "Filtra per Parole Chiave nel Sottotitolo:", 
-                    placeholder="Inserisci una o più parole chiave separate da spazi"
-                )
-                exclude_subtitle_keyword_filter = st.text_input(
-                    "Escludi Parole Chiave nel Sottotitolo:", 
-                    placeholder="Inserisci una o più parole chiave separate da spazi"
-                )
-
-            # Applica i filtri al dataframe
-            filtered_df = df[(df['Prezzo'] >= min_price) & (df['Prezzo'] <= max_price)]
-
-            def extract_keywords(input_string):
-                """Extract keywords from a string, keeping quoted groups together."""
-                matches = re.findall(r'"(.*?)"|(\S+)', input_string.lower())
-                return [kw[0] or kw[1] for kw in matches]  # Flatten the tuple results
-
-            if keyword_filter:
-                keywords = extract_keywords(keyword_filter)
-                filtered_df = filtered_df[
-                    filtered_df['Titolo'].str.lower().apply(
-                        lambda title: all(keyword in title for keyword in keywords)
-                    )
-                ]
-            if exclude_keyword_filter:
-                exclude_keywords = extract_keywords(exclude_keyword_filter)
-                filtered_df = filtered_df[
-                    filtered_df['Titolo'].str.lower().apply(
-                        lambda title: not any(keyword in title for keyword in exclude_keywords)
-                    )
-                ]
-            
-            if subtitle_keyword_filter:
-                subtitle_keywords = extract_keywords(subtitle_keyword_filter)
-                filtered_df = filtered_df[
-                    filtered_df['Sottotitolo'].str.lower().apply(
-                        lambda subtitle: all(keyword in subtitle for keyword in subtitle_keywords)
-                    )
-                ]
-            if exclude_subtitle_keyword_filter:
-                exclude_subtitle_keywords = extract_keywords(exclude_subtitle_keyword_filter)
-                filtered_df = filtered_df[
-                    filtered_df['Sottotitolo'].str.lower().apply(
-                        lambda subtitle: not any(keyword in subtitle for keyword in exclude_subtitle_keywords)
-                    )
-                ]
-
             st.write(f"Risultati filtrati: {len(filtered_df)} su {len(df)} totali")
             st.dataframe(filtered_df, use_container_width=True, hide_index=True)
 

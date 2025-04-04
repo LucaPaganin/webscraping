@@ -61,6 +61,10 @@ logging.basicConfig(level=logging.INFO,
 log = logging.getLogger(__name__) # Ottieni un logger per questo modulo
 
 # --- Functions ---
+def extract_keywords(input_string):
+    """Extract keywords from a string, keeping quoted groups together."""
+    matches = re.findall(r'"(.*?)"|(\S+)', input_string.lower())
+    return [kw[0] or kw[1] for kw in matches]  # Flatten the tuple results
 
 def clean_ebay_price(price_text):
     """Cleans the price string and converts it to a float."""
