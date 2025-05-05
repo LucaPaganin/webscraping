@@ -91,6 +91,29 @@
             }
         },
         {
+            "name": "[scrapy]: immobit_selenium",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "scrapy",
+            "args": [
+                "crawl",
+                "immobit_selenium",
+                "-L", "DEBUG",
+                "--set=CLOSESPIDER_PAGECOUNT=3",
+                "--set=DOWNLOAD_DELAY=2",
+                "--set=COOKIES_DEBUG=True"
+            ],
+            "cwd": "${workspaceFolder}/immob",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/"
+            },
+            "presentation": {
+                "group": "Immobit",
+                "order": 2
+            }
+        },
+        {
             "name": "[scrapy-spider]: immobit (single URL)",
             "type": "debugpy",
             "request": "launch",
@@ -112,7 +135,7 @@
             },
             "presentation": {
                 "group": "Immobit",
-                "order": 2
+                "order": 3
             }
         },
         {
@@ -139,7 +162,7 @@
             },
             "presentation": {
                 "group": "Immobit",
-                "order": 3
+                "order": 4
             }
         },
         {
@@ -155,7 +178,7 @@
             },
             "presentation": {
                 "group": "Immobit",
-                "order": 3
+                "order": 5
             }
         },
         {
@@ -174,7 +197,7 @@
             },
             "presentation": {
                 "group": "Immobit",
-                "order": 4
+                "order": 6
             }
         }
     ]

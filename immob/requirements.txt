@@ -2,3 +2,5 @@ fake-useragent==2.2.0
 scrapy
 pandas
 w3lib
+selenium
+webdriver-manager
