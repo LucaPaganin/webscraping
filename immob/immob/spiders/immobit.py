@@ -111,23 +111,22 @@ class ImmobitSpider(scrapy.Spider):
                 full_url = None
                 announce_item['id'] = None
 
-            yield announce_item
-
+            # Don't yield the announce_item from the list page yet
+            # Instead, first get the details and then yield a complete item
+            
             # Verifica se abbiamo trovato un URL di dettaglio valido prima di procedere
             if full_url:
                 yield scrapy.Request(
                     url=full_url,
                     callback=self.parse_announce_page,
                     meta={
-                        'title': announce_item.get('title'),
-                        'url': full_url, # L'URL completo
-                        'prezzo_lista_preview': announce_item.get('prezzo_lista_preview'),
-                        'caratteristiche_lista_preview': announce_item.get('caratteristiche_lista_preview'),
-                        'immagine_lista_preview': announce_item.get('immagine_lista_preview')
+                        'item': announce_item  # Pass the entire item
                     }
                 )
             else:
+                # If we couldn't get a detail URL, yield the basic item
                 self.logger.warning(f"Link dettaglio non trovato per un item sulla pagina: {response.url}")
+                yield announce_item
 
 
         # --- Logica per passare alla pagina successiva ---
@@ -149,31 +148,53 @@ class ImmobitSpider(scrapy.Spider):
     
     def parse_announce_page(self, response):
         try:
-            loader = ItemLoader(item=ImmobItem(), response=response)
+            # Get the item from the list page
+            announce_item = response.meta['item']
+            
+            # Create a new loader with the ImmobAnnounceItem we already have
+            # This allows us to enrich the same item type rather than creating a new one
+            loader = ItemLoader(item=announce_item, response=response)
+            
+            # Extract detailed information from the announce page
             ul_xpath = "//ul[contains(@class, 'in-landingDetail__mainFeatures')]"
+            
+            # Only add these fields if they might have better data on the detail page
             loader.add_xpath('prezzo', "//li[contains(@class, 'in-detail__mainFeaturesPrice')]/text()")
+            
+            # Add fields that are only available on the detail page
             loader.add_xpath(
                 'zona', 
                 "//div[@class='in-titleBlock__content']//span[@class='in-location']/text()"
             )
             
+            # These might have better data on the detail page
             for key in ['locali', 'superficie', 'piano']:
                 loader.add_xpath(key, f"{ul_xpath}//li[@aria-label='{key}']")
             loader.add_xpath('bagni', f"{ul_xpath}//li[starts-with(@aria-label, 'bagn')]")
             
+            # Add additional fields from the detail page
             for key, sibling in self.sibling_mapping.items():
                 loader.add_xpath(key, f"//dt[@class='in-realEstateFeatures__title' and text() = '{sibling}']/following-sibling::*")
+            
+            # Load the enriched item
             item = loader.load_item()
-            item['title'] = response.meta['title']
-            item['url'] = response.meta['url']
-            item['id'] = item['url'].rstrip("/").split("/")[-1]
-            item['citta'] = item['zona'][0]
-            item['quartiere'] = item['zona'][1]
-            try:
-                item['via'] = item['zona'][2]
-            except IndexError:
-                item['via'] = ""
-            # print(item)
+            
+            # Process zona field if it exists to extract city, neighborhood, etc.
+            if 'zona' in item:
+                parts = item['zona']
+                if isinstance(parts, list) and len(parts) > 0:
+                    item['citta'] = parts[0]
+                    if len(parts) > 1:
+                        item['quartiere'] = parts[1]
+                    if len(parts) > 2:
+                        item['via'] = parts[2]
+            
+            # Yield the enriched item to the pipeline
             yield item
+            
         except Exception as e:
             self.logger.error(f"Error parsing announce page: {e}")
+            # In case of error, try to yield the original item if available
+            if 'item' in response.meta:
+                self.logger.info(f"Yielding list page item as fallback for {response.url}")
+                yield response.meta['item']

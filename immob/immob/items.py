@@ -175,3 +175,29 @@ class ImmobAnnounceItem(scrapy.Item):
         input_processor=MapCompose(lambda x: "Terrazzo" in x if x else None),
         output_processor=TakeFirst()
     )
+    
+    # Additional fields from detail page
+    zona = scrapy.Field()
+    citta = scrapy.Field()
+    quartiere = scrapy.Field()
+    via = scrapy.Field()
+    data = scrapy.Field(
+        input_processor=TakeFirst(),
+        output_processor=apply_takefirst(parse_date)
+    )
+    stato = scrapy.Field(
+        input_processor=TakeFirst(),
+        output_processor=apply_takefirst(remove_tags)
+    )
+    spese_condominio = scrapy.Field(
+        input_processor=TakeFirst(),
+        output_processor=apply_takefirst(parse_digits)
+    )
+    numero_piani = scrapy.Field(
+        input_processor=apply_takefirst(parse_digits),
+        output_processor=Join()
+    )
+    posti_auto = scrapy.Field(
+        input_processor=apply_takefirst(remove_tags, defval=""),
+        output_processor=Join()
+    )

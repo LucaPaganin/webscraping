@@ -68,8 +68,16 @@ DOWNLOADER_MIDDLEWARES = {
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   "immob.pipelines.ImmobPipeline": 300,
+   "immob.pipelines.GenericJSONPipeline": 300,
+   "immob.pipelines.ImmobPipeline": 400,
 }
+
+# JSON Pipeline settings
+JSON_OUTPUT_DIR = 'output'  # Base directory for all spider outputs
+JSON_KEEP_IDS = True        # Whether to save IDs for deduplication
+JSON_DEDUPLICATE = True     # Whether to drop duplicate items
+JSON_ID_FIELD = 'id'        # Field to use as the unique identifier
+JSON_INDENT = 2             # JSON file indentation
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
