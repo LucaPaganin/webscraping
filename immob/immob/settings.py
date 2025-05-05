@@ -1,6 +1,6 @@
 # Scrapy settings for immob project
-#
-# For simplicity, this file contains only settings considered important or
+# Disable cookies (enabled by default)
+COOKIES_ENABLED = False  # Disable cookies to avoid tracking# For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
 #
 #     https://docs.scrapy.org/en/latest/topics/settings.html
@@ -14,20 +14,24 @@ NEWSPIDER_MODULE = "immob.spiders"
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = "immob (+http://www.yourdomain.com)"
+# User agent handling is done by RandomUserAgentMiddleware
+USER_AGENT_TYPE = 'random'  # Options: 'random', 'chrome', 'firefox', 'safari', etc.
+ROTATE_UA_PER_REQUEST = True  # Whether to use a new UA for each request
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-#CONCURRENT_REQUESTS = 32
+CONCURRENT_REQUESTS = 8  # Set lower to avoid detection
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 2  # Add a 2 second delay between requests to avoid detection
+RANDOMIZE_DOWNLOAD_DELAY = True  # Randomize the download delay
+
 # The download delay setting will honor only one of:
-#CONCURRENT_REQUESTS_PER_DOMAIN = 16
+CONCURRENT_REQUESTS_PER_DOMAIN = 4  # Lower the concurrent requests to avoid detection
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
@@ -50,9 +54,10 @@ COOKIES_ENABLED = False
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    "immob.middlewares.ImmobDownloaderMiddleware": 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+    "immob.middlewares.RandomUserAgentMiddleware": 400,
+    "immob.middlewares.ImmobDownloaderMiddleware": 543,
+}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
@@ -68,7 +73,11 @@ ITEM_PIPELINES = {
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
-#AUTOTHROTTLE_ENABLED = True
+AUTOTHROTTLE_ENABLED = True  # Enable AutoThrottle
+AUTOTHROTTLE_START_DELAY = 3.0  # Initial download delay
+AUTOTHROTTLE_MAX_DELAY = 10.0  # Maximum download delay
+AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0  # Target concurrency (lower = more polite)
+AUTOTHROTTLE_DEBUG = False  # Enable debug mode
 # The initial download delay
 #AUTOTHROTTLE_START_DELAY = 5
 # The maximum download delay to be set in case of high latencies

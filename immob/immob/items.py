@@ -101,6 +101,32 @@ class ImmobItem(scrapy.Item):
     )
      
 
+def extract_value_from_feature(text, pattern=None):
+    """Extract the numeric value from a feature string"""
+    if text is None:
+        return None
+    
+    if pattern:
+        match = re.search(pattern, text)
+        if match:
+            return match.group(1)
+    
+    # Default extraction - get the first number
+    match = re.search(r'(\d+)', text)
+    if match:
+        return match.group(1)
+    return text
+
+def extract_boolean_from_feature(text, true_value="Si", false_value="No"):
+    """Extract a boolean value from a feature string"""
+    if text is None:
+        return None
+    if true_value.lower() in text.lower():
+        return True
+    if false_value.lower() in text.lower():
+        return False
+    return None
+
 class ImmobAnnounceItem(scrapy.Item):
     # define the fields for your item here like:
     id = scrapy.Field()
@@ -109,13 +135,43 @@ class ImmobAnnounceItem(scrapy.Item):
     prezzo_lista_preview = scrapy.Field()
     caratteristiche_lista_preview = scrapy.Field()
     immagine_lista_preview = scrapy.Field()
-    prezzo = scrapy.Field()
-    superficie = scrapy.Field()
-    locali = scrapy.Field()
-    piano = scrapy.Field()
-    bagni = scrapy.Field()
-    ascensore = scrapy.Field()
-    balcone = scrapy.Field()
-    arredato = scrapy.Field()
-    cantina = scrapy.Field()
-    terrazzo = scrapy.Field()
+    prezzo = scrapy.Field(
+        input_processor=MapCompose(parse_price),
+        output_processor=Join()
+    )
+    superficie = scrapy.Field(
+        input_processor=MapCompose(lambda x: extract_value_from_feature(x, r'(\d+)\s*m²')),
+        output_processor=TakeFirst()
+    )
+    locali = scrapy.Field(
+        input_processor=MapCompose(lambda x: extract_value_from_feature(x, r'(\d+)\s*locale')),
+        output_processor=TakeFirst()
+    )
+    piano = scrapy.Field(
+        input_processor=MapCompose(lambda x: extract_value_from_feature(x, r'Piano\s+(\d+)')),
+        output_processor=TakeFirst()
+    )
+    bagni = scrapy.Field(
+        input_processor=MapCompose(lambda x: extract_value_from_feature(x, r'(\d+)\s*bagn')),
+        output_processor=TakeFirst()
+    )
+    ascensore = scrapy.Field(
+        input_processor=MapCompose(lambda x: "Ascensore" in x if x else None),
+        output_processor=TakeFirst()
+    )
+    balcone = scrapy.Field(
+        input_processor=MapCompose(lambda x: "Balcone" in x if x else None),
+        output_processor=TakeFirst()
+    )
+    arredato = scrapy.Field(
+        input_processor=MapCompose(lambda x: "Arredato" in x if x else None),
+        output_processor=TakeFirst()
+    )
+    cantina = scrapy.Field(
+        input_processor=MapCompose(lambda x: "Cantina" in x if x else None),
+        output_processor=TakeFirst()
+    )
+    terrazzo = scrapy.Field(
+        input_processor=MapCompose(lambda x: "Terrazzo" in x if x else None),
+        output_processor=TakeFirst()
+    )

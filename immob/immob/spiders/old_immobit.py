@@ -3,8 +3,8 @@ from scrapy.loader import ItemLoader
 from immob.items import ImmobItem
 
 
-class ImmobitSpider(scrapy.Spider):
-    name = "immobit"
+class OldImmobitSpider(scrapy.Spider):
+    name = "old_immobit"
     allowed_domains = ["immobiliare.it"]
     
     def start_requests(self):

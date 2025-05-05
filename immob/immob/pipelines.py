@@ -9,8 +9,6 @@ from itemadapter import ItemAdapter
 from scrapy.exceptions import DropItem
 import json, pandas as pd
 from pathlib import Path
-from itemadapter import ItemAdapter
-from common.gsheets import GSheetPipeline
 
 IDS_FILE = Path("ids.json")
 

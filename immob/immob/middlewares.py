@@ -4,6 +4,7 @@
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
 from scrapy import signals
+from fake_useragent import UserAgent
 
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
@@ -101,3 +102,69 @@ class ImmobDownloaderMiddleware:
 
     def spider_opened(self, spider):
         spider.logger.info("Spider opened: %s" % spider.name)
+
+
+class RandomUserAgentMiddleware:
+    """Middleware to rotate User-Agent for each request"""
+    
+    # Common user agents to use as fallback
+    COMMON_USER_AGENTS = [
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0',
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/124.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1',
+    ]
+    
+    def __init__(self, settings=None):
+        self.use_fake_ua = True
+        try:
+            self.ua = UserAgent(fallback='random')
+            self.ua_type = getattr(settings, 'USER_AGENT_TYPE', 'random')
+            
+            # Test one generation to make sure it's working
+            test_ua = self.ua.random
+            if not test_ua or len(test_ua) < 20:
+                raise ValueError("Invalid user agent generated")
+        except Exception as e:
+            import logging
+            logging.warning(f"Error initializing fake-useragent: {e}")
+            logging.warning("Using fallback user agents list")
+            self.use_fake_ua = False
+        
+        # Use settings if provided
+        if settings:
+            self.rotate_per_request = getattr(settings, 'ROTATE_UA_PER_REQUEST', True)
+        else:
+            self.rotate_per_request = True
+            
+        import random
+        self.random = random
+        
+    @classmethod
+    def from_crawler(cls, crawler):
+        middleware = cls(crawler.settings)
+        crawler.signals.connect(middleware.spider_opened, signal=signals.spider_opened)
+        return middleware
+    
+    def get_ua(self):
+        if self.use_fake_ua:
+            if self.ua_type == 'random':
+                return self.ua.random
+            elif hasattr(self.ua, self.ua_type):
+                return getattr(self.ua, self.ua_type)
+            else:
+                return self.ua.random
+        else:
+            return self.random.choice(self.COMMON_USER_AGENTS)
+    
+    def process_request(self, request, spider):
+        if self.rotate_per_request or not request.headers.get('User-Agent'):
+            ua = self.get_ua()
+            spider.logger.debug(f"Using User-Agent: {ua}")
+            request.headers["User-Agent"] = ua
+        return None
+        
+    def spider_opened(self, spider):
+        spider.logger.info('RandomUserAgentMiddleware enabled')
