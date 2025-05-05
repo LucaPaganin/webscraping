@@ -10,7 +10,6 @@
             "request": "launch",
             "program": "${workspaceFolder}/inpa/inpa.py",
             "console": "integratedTerminal",
-            "group": "INPA",
             "presentation": {
                 "group": "INPA",
                 "order": 1
@@ -22,7 +21,6 @@
             "request": "launch",
             "program": "${workspaceFolder}/moviedownloader/moviedownloader.py",
             "console": "integratedTerminal",
-            "group": "Movie Downloader",
             "presentation": {
                 "group": "Movie Downloader",
                 "order": 1
@@ -34,7 +32,6 @@
             "request": "launch",
             "program": "${workspaceFolder}/ebay/scrape_main.py",
             "console": "integratedTerminal",
-            "group": "Ebay Scraper",
             "presentation": {
                 "group": "Ebay Scraper",
                 "order": 1
@@ -50,7 +47,6 @@
                 "${workspaceFolder}/ebay/streamlit_scraper.py"
             ],
             "console": "integratedTerminal",
-            "group": "Streamlit",
             "presentation": {
                 "group": "Streamlit",
                 "order": 1
@@ -66,7 +62,6 @@
             // "env": {
             //     "PYTHONPATH": "${workspaceFolder}/ryanair"
             // }
-            "group": "Ryanair",
             "presentation": {
                 "group": "Ryanair",
                 "order": 1
@@ -74,26 +69,81 @@
         },
         {
             "name": "[scrapy-spider]: immobit",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "module": "scrapy",
             "args": [
-                "runspider",
-                "immob/spiders/immobit.py"
+                "crawl",
+                "immobit",
+                "-L", "DEBUG",
+                "--set=CLOSESPIDER_PAGECOUNT=3",
+                "--set=DOWNLOAD_DELAY=2",
+                "--set=COOKIES_DEBUG=True"
             ],
             "cwd": "${workspaceFolder}/immob",
             "justMyCode": false,
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/"
             },
-            "group": "Immobit",
             "presentation": {
                 "group": "Immobit",
                 "order": 1
             }
         },
         {
-            "name": "immobit debug",
+            "name": "[scrapy-spider]: immobit (single URL)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "scrapy",
+            "args": [
+                "crawl",
+                "immobit",
+                "-L", "DEBUG",
+                "-a", "start_url=https://www.immobiliare.it/annunci/120065826/",
+                "--set=COOKIES_DEBUG=True",
+                "--set=ROBOTSTXT_OBEY=False",
+                "--set=CONCURRENT_REQUESTS=1",
+                "--set=DOWNLOAD_DELAY=5"
+            ],
+            "cwd": "${workspaceFolder}/immob",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/"
+            },
+            "presentation": {
+                "group": "Immobit",
+                "order": 2
+            }
+        },
+        {
+            "name": "[scrapy-spider]: immobit (with proxy)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "scrapy",
+            "args": [
+                "crawl",
+                "immobit",
+                "-L", "DEBUG",
+                "-a", "start_url=https://www.immobiliare.it/annunci/120065826/",
+                "--set=COOKIES_DEBUG=True",
+                "--set=ROBOTSTXT_OBEY=False",
+                "--set=CONCURRENT_REQUESTS=1",
+                "--set=DOWNLOAD_DELAY=10",
+                "--set=PROXY_LIST=${workspaceFolder}/immob/proxies.txt",
+                "--set=PROXY_MODE=0"
+            ],
+            "cwd": "${workspaceFolder}/immob",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/"
+            },
+            "presentation": {
+                "group": "Immobit",
+                "order": 3
+            }
+        },
+        {
+            "name": "immobit debug script",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/immob/Untitled.py",
@@ -103,10 +153,28 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/"
             },
-            "group": "Immobit",
             "presentation": {
                 "group": "Immobit",
-                "order": 2
+                "order": 3
+            }
+        },
+        {
+            "name": "[scrapy-shell]: immobiliare.it",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "scrapy",
+            "args": [
+                "shell",
+                "https://www.immobiliare.it/annunci/120065826/"
+            ],
+            "cwd": "${workspaceFolder}/immob",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/"
+            },
+            "presentation": {
+                "group": "Immobit",
+                "order": 4
             }
         }
     ]
