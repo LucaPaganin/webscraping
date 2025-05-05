@@ -101,3 +101,21 @@ class ImmobItem(scrapy.Item):
     )
      
 
+class ImmobAnnounceItem(scrapy.Item):
+    # define the fields for your item here like:
+    id = scrapy.Field()
+    url = scrapy.Field()
+    title = scrapy.Field()
+    prezzo_lista_preview = scrapy.Field()
+    caratteristiche_lista_preview = scrapy.Field()
+    immagine_lista_preview = scrapy.Field()
+    prezzo = scrapy.Field()
+    superficie = scrapy.Field()
+    locali = scrapy.Field()
+    piano = scrapy.Field()
+    bagni = scrapy.Field()
+    ascensore = scrapy.Field()
+    balcone = scrapy.Field()
+    arredato = scrapy.Field()
+    cantina = scrapy.Field()
+    terrazzo = scrapy.Field()

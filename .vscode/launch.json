@@ -9,21 +9,36 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/inpa/inpa.py",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "group": "INPA",
+            "presentation": {
+                "group": "INPA",
+                "order": 1
+            }
         },
         {
             "name": "Python: movie_downloader",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/moviedownloader/moviedownloader.py",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "group": "Movie Downloader",
+            "presentation": {
+                "group": "Movie Downloader",
+                "order": 1
+            }
         },
         {
             "name": "Python: ebay scraper",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/ebay/scrape_main.py",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "group": "Ebay Scraper",
+            "presentation": {
+                "group": "Ebay Scraper",
+                "order": 1
+            }
         },
         {
             "name": "Streamlit: ebay/vinted scraper",
@@ -34,7 +49,12 @@
                 "run",
                 "${workspaceFolder}/ebay/streamlit_scraper.py"
             ],
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "group": "Streamlit",
+            "presentation": {
+                "group": "Streamlit",
+                "order": 1
+            }
         },
         {
             "name": "Python: ryanair flight monitor",
@@ -46,6 +66,11 @@
             // "env": {
             //     "PYTHONPATH": "${workspaceFolder}/ryanair"
             // }
+            "group": "Ryanair",
+            "presentation": {
+                "group": "Ryanair",
+                "order": 1
+            }
         },
         {
             "name": "[scrapy-spider]: immobit",
@@ -60,7 +85,29 @@
             "justMyCode": false,
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/"
+            },
+            "group": "Immobit",
+            "presentation": {
+                "group": "Immobit",
+                "order": 1
             }
         },
+        {
+            "name": "immobit debug",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/immob/Untitled.py",
+            "args": [],
+            "cwd": "${workspaceFolder}/immob",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/"
+            },
+            "group": "Immobit",
+            "presentation": {
+                "group": "Immobit",
+                "order": 2
+            }
+        }
     ]
 }
