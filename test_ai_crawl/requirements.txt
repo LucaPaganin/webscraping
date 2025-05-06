@@ -1,0 +1,4 @@
+crawl4ai
+pandas
+autogen-agentchat
+autogen-ext[openai]
