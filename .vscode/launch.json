@@ -166,10 +166,10 @@
             }
         },
         {
-            "name": "immobit debug script",
+            "name": "[selenium]: immobit",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/immob/Untitled.py",
+            "program": "${workspaceFolder}/immob/selenium_simple_scraper.py",
             "args": [],
             "cwd": "${workspaceFolder}/immob",
             "justMyCode": false,
