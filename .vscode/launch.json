@@ -166,10 +166,10 @@
             }
         },
         {
-            "name": "immobit debug script",
+            "name": "[selenium]: immobit",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/immob/Untitled.py",
+            "program": "${workspaceFolder}/immob/selenium_simple_scraper.py",
             "args": [],
             "cwd": "${workspaceFolder}/immob",
             "justMyCode": false,
@@ -198,6 +198,36 @@
             "presentation": {
                 "group": "Immobit",
                 "order": 6
+            }
+        },
+        {
+            "name": "[Crawl4AI]: test",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test_ai_crawl/test_ai_crawl.py",
+            "cwd": "${workspaceFolder}/test_ai_crawl",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/"
+            },
+            "presentation": {
+                "group": "Crawl4AI",
+                "order": 1
+            }
+        },
+        {
+            "name": "[autogen]: test",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test_ai_crawl/test_agents.py",
+            "cwd": "${workspaceFolder}/test_ai_crawl",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/"
+            },
+            "presentation": {
+                "group": "autogen",
+                "order": 1
             }
         }
     ]
