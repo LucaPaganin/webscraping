@@ -5,13 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: INPA",
+            "name": "[agent]: browser-user agent",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/inpa/inpa.py",
+            "program": "${workspaceFolder}/browser_use/main.py",
             "console": "integratedTerminal",
             "presentation": {
-                "group": "INPA",
+                "group": "agent",
                 "order": 1
             }
         },
