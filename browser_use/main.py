@@ -2,9 +2,11 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-from browser_use import Agent, Browser, BrowserConfig
+from browser_use import Agent, Browser, BrowserConfig, Controller
 from langchain_google_genai import ChatGoogleGenerativeAI
 import os
+from models import Immobili
+from prompts import IMMOBILIARE_IT_PROMPT
 
 import asyncio
 
@@ -44,7 +46,7 @@ def configure_agent(browser=None):
     os.environ['GEMINI_API_KEY'] = GOOGLE_API_KEY
 
     llm = ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-pro",
         temperature=0,
         max_tokens=None,
         timeout=None,
@@ -52,29 +54,16 @@ def configure_agent(browser=None):
         # other params...
     )
 
-    TASK = """
-    Visit the website of immobiliare.it and make a search for renting houses in Savona, Italy.
-    Remember to type in the search bar "Savona" and to select the first option appearing in the dropdown.
-    After that, select the first two houses appearing in the results and extract the following information:
-    - Title
-    - Price
-    - Description
-    - All characteristics you find in the features area
-    - Link to the house. You can find it in the address bar of the browser when you go to the house page.
-    
-    Expect that the page will be in Italian. Also, dialog windows may appear asking if you want to save your search or to add the house to your favorites.
-    If they appear, do not worry about them: simply close them and continue. The dialogs may appear either in the listing page or in the house page.
-    If you are asked to log in, please do not log in. Just close the dialog and continue.
-    Remember to simulate human behavior by waiting a few seconds before clicking on the house.
-    Do not be too fast or too slow, try to be as human-like as possible.
-    After you have extracted the information, please summarize it in a structured way.
-    """.strip()
+    TASK = IMMOBILIARE_IT_PROMPT.strip()
+
+    controller = Controller(output_model=Immobili)
 
     # Create the agent with your configured browser
     agent = Agent(
         task=TASK,
         llm=llm,
         browser=browser,
+        controller=controller
     )
 
     return agent
