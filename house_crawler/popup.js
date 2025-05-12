@@ -1,3 +1,5 @@
+import { saveAutomationState } from './common.js';
+
 document.addEventListener('DOMContentLoaded', () => {
   // Elementi UI
   const statusDisplay = document.getElementById('status-display');
@@ -146,15 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Aggiorna il delay nell'automationState locale e in storage
     const delayMs = parseInt(delayInput.value, 10) || 1000;
     automationState.delayMs = delayMs;
-    saveAutomationState();
-  }
-
-  async function saveAutomationState() {
-    try {
-      await chrome.storage.local.set({ automationState });
-    } catch (error) {
-      console.error('Error saving automation state:', error);
-    }
+    saveAutomationState(automationState);
   }
 
   async function saveScrapingRules() {

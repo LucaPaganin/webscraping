@@ -257,14 +257,22 @@ function handleValueSelection(element) {
       alert('Seleziona un elemento DENTRO il contenitore');
       return;
     }
-    
+
     // Genera un selettore relativo rispetto al container
-    state.tempRule.relativeSelector = generateRelativeSelector(element, state.selectedContainerElement);
+    const relativeSelector = generateRelativeSelector(element, state.selectedContainerElement);
+    state.tempRule.relativeSelector = relativeSelector;
+
+    // Esegui querySelectorAll per ottenere tutti gli elementi corrispondenti
+    const matchingElements = state.selectedContainerElement.querySelectorAll(relativeSelector);
+    console.log('Matching elements:', matchingElements);
+
+    // Salva i selettori di tutti gli elementi corrispondenti
+    state.tempRule.matchingElements = Array.from(matchingElements).map(el => generateSelector(el));
   } else {
     // Per singoli elementi o nextButton, salva il selettore direttamente
     state.tempRule.selector = generateSelector(element);
   }
-  
+
   // Per il pulsante "avanti", finiamo qui
   if (state.selectionType === 'nextButton') {
     requestRuleName('Pulsante Avanti', finalizeRule);

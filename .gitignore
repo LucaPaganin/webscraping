@@ -5,6 +5,7 @@ items.jsonl
 .DS_Store
 ebay_results
 scraping_results
+.chrome-profile/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

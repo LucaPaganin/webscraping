@@ -1,3 +1,5 @@
+import { saveAutomationState } from './common.js';
+
 // Stato globale dell'estensione
 let automationState = {
   status: 'idle',    // 'idle', 'running', 'paused'
@@ -105,7 +107,7 @@ async function startAutomation(delay) {
   // Aggiorna lo stato
   automationState.status = 'running';
   automationState.delayMs = delay || 1000;
-  saveAutomationState();
+  saveAutomationState(automationState);
   
   // Resetta i dati estratti
   extractedData = [];
@@ -120,7 +122,7 @@ async function startAutomation(delay) {
     
     automationState.currentTabId = activeTab.id;
     automationState.currentPageUrl = activeTab.url;
-    saveAutomationState();
+    saveAutomationState(automationState);
     
     // Inietta il content script nella tab attiva
     injectContentScript(activeTab.id, () => {
@@ -148,7 +150,7 @@ function pauseAutomation() {
   }
   
   automationState.status = 'paused';
-  saveAutomationState();
+  saveAutomationState(automationState);
   updatePopupStatus();
 }
 
@@ -162,7 +164,7 @@ function stopAutomation() {
   }
   
   automationState.status = 'idle';
-  saveAutomationState();
+  saveAutomationState(automationState);
   updatePopupStatus();
 }
 
@@ -209,7 +211,7 @@ function handleNextButtonNotFound() {
   
   // Ferma l'automazione quando non viene trovato il pulsante "avanti"
   automationState.status = 'idle';
-  saveAutomationState();
+  saveAutomationState(automationState);
   updatePopupStatus();
 }
 
@@ -292,7 +294,7 @@ function handlePageLoaded(tabId) {
     // Aggiorna l'URL corrente
     chrome.tabs.get(tabId, (tab) => {
       automationState.currentPageUrl = tab.url;
-      saveAutomationState();
+      saveAutomationState(automationState);
       updatePopupStatus();
     });
   }

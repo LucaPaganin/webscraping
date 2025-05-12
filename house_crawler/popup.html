@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web Scraper Avanzato</title>
+  <title>House Crawler</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -110,7 +110,7 @@
   </style>
 </head>
 <body>
-  <h1>Web Scraper Avanzato</h1>
+  <h1>House Crawler</h1>
   
   <div class="status-indicator" id="status-display">Idle</div>
 
@@ -144,6 +144,9 @@
     <button id="btn-download" class="btn" disabled>💾 Scarica JSON</button>
   </div>
 
-  <script src="popup.js"></script>
+  <button id="open-as-page" class="scraper-button">Apri come Pagina</button>
+
+  <script type="module" src="popup.js"></script>
+  <script src="open_as_page.js"></script>
 </body>
 </html>
