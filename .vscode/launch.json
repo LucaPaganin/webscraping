@@ -53,21 +53,6 @@
             }
         },
         {
-            "name": "Python: ryanair flight monitor",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/ryanair/monitor_main.py",
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal",
-            // "env": {
-            //     "PYTHONPATH": "${workspaceFolder}/ryanair"
-            // }
-            "presentation": {
-                "group": "Ryanair",
-                "order": 1
-            }
-        },
-        {
             "name": "[scrapy-spider]: immobit",
             "type": "debugpy",
             "request": "launch",
@@ -229,6 +214,31 @@
                 "group": "autogen",
                 "order": 1
             }
+        },
+        {
+            "name": "[house_crawler]: Chrome",
+            "type": "chrome",
+            "request": "launch",
+            "url": "https://immobiliare.it",
+            "runtimeArgs": [
+                "--load-extension=${workspaceFolder}/house_crawler",
+                "--disk-cache-size=0",
+                "--media-cache-size=0",
+                "--disable-blink-features=AutomationControlled",
+                "--disable-infobars",
+                "--start-maximized",
+                "--user-data-dir=${workspaceFolder}/.chrome-profile",
+                "--disable-web-security",
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-popup-blocking",
+                "--disable-extensions-except=${workspaceFolder}/house_crawler"
+            ],
+            "presentation": {
+                "group": "house_crawler",
+                "order": 1
+            }
         }
+
     ]
 }
