@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Scraper Avanzato</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      width: 400px;
+      padding: 15px;
+      margin: 0;
+    }
+    h1 {
+      font-size: 18px;
+      margin-top: 0;
+      margin-bottom: 15px;
+    }
+    .section {
+      margin-bottom: 20px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .section-title {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .btn {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 14px;
+      margin: 2px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .btn-danger {
+      background-color: #f44336;
+    }
+    .btn-warning {
+      background-color: #ff9800;
+    }
+    .btn-info {
+      background-color: #2196F3;
+    }
+    .btn-secondary {
+      background-color: #757575;
+    }
+    .btn:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    .rules-list {
+      max-height: 180px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+    .rule-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px;
+      border-bottom: 1px solid #eee;
+    }
+    .rule-item:last-child {
+      border-bottom: none;
+    }
+    .status-indicator {
+      padding: 5px;
+      border-radius: 4px;
+      font-weight: bold;
+      background-color: #e0e0e0;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .status-running {
+      background-color: #4CAF50;
+      color: white;
+    }
+    .status-paused {
+      background-color: #ff9800;
+      color: white;
+    }
+    .preview-container {
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+      padding: 10px;
+      background-color: #f9f9f9;
+      font-family: monospace;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+    .config-row {
+      margin-bottom: 10px;
+    }
+    label {
+      display: inline-block;
+      width: 100px;
+    }
+    input[type="number"] {
+      width: 80px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Web Scraper Avanzato</h1>
+  
+  <div class="status-indicator" id="status-display">Idle</div>
+
+  <div class="section">
+    <div class="section-title">Controlli Automazione</div>
+    <button id="btn-start" class="btn">▶️ Avvia</button>
+    <button id="btn-pause" class="btn btn-warning" disabled>⏸️ Pausa</button>
+    <button id="btn-stop" class="btn btn-danger" disabled>⏹️ Stop</button>
+    <div class="config-row">
+      <label for="delay-input">Delay (ms):</label>
+      <input type="number" id="delay-input" value="1000" min="0" step="100">
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Regole di Estrazione</div>
+    <div class="rules-list" id="rules-list">
+      <!-- Regole verranno aggiunte qui dinamicamente -->
+    </div>
+    <button id="btn-add-single" class="btn btn-info">+ Dato Singolo</button>
+    <button id="btn-add-multiple" class="btn btn-info">+ Lista Dati</button>
+    <button id="btn-add-next" class="btn btn-info">+ Pulsante Avanti</button>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Anteprima Dati</div>
+    <div class="preview-container" id="preview-container">
+      Nessun dato da visualizzare
+    </div>
+    <button id="btn-preview" class="btn btn-secondary">🔍 Anteprima</button>
+    <button id="btn-download" class="btn" disabled>💾 Scarica JSON</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
