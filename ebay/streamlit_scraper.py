@@ -189,8 +189,21 @@ def scraping_page():
         if results_df is not None and not results_df.empty:
             st.write(f"**Data successfully extracted from {website}!**")
             st.write(f"Number of records extracted: {len(results_df)}")
-            st.write("Applying language detection to titles...")
-            results_df['Language'] = results_df['Title'].apply(detect_language)
+
+            results_df.rename(columns={
+                'Titolo': 'Title',
+                'Sottotitolo': 'Subtitle',
+                'Prezzo': 'Price',
+                'Prezzo con spedizione': 'Price with Shipping',
+                'Link': 'Link',
+                'Brand': 'Brand',
+                'Condizione': 'Condition',
+                'Preferiti': 'Favorites',
+                'Note': 'Notes'
+            }, inplace=True)
+
+            # st.write("Applying language detection to titles...")
+            # results_df['Language'] = results_df['Title'].apply(detect_language)
             
             st.write("Saving data to a CSV file...")
             try:
