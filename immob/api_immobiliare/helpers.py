@@ -194,3 +194,17 @@ def create_ads_dataframe(ads_list: list) -> pd.DataFrame:
     sorted_columns.extend(remaining_columns)
     
     return df[sorted_columns]
+
+def transform_df_dtypes(df):
+    df['surface_m2'] = df.surface.apply(lambda s: int(s.split()[0]) if s else s)
+
+    def cast_floor_number(f):
+        if not isinstance(f, str):
+            return f
+        if f.isdigit():
+            return int(f)
+        if "piano terra" in f or "piano rialzato" in f:
+            return 0
+        return None
+
+    df['floor_number'] = df['floor_number'].apply(cast_floor_number)
