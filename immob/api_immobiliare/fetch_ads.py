@@ -33,17 +33,6 @@ logger = logging.getLogger(__name__)
 
 # PARAMETRI DI RICERCA
 BASE_URL = "https://www.immobiliare.it/api-next/search-list/listings/"
-AREA_PARAMS = {
-    "fkRegione": "lig",
-    "idProvincia": "SV",
-    "idNazione": "IT",
-    "idContratto": "1",
-    "idCategoria": "1",
-    "__lang": "it",
-    "pag": 1,
-    "paramsCount": 0,
-    "path": "/vendita-case/savona-provincia/"
-}
 
 
 COOKIES = {
@@ -85,18 +74,18 @@ def load_data_from_dict(data_dict):
     
     return ads
 
-def fetch_ads(max_pages=None):
+def fetch_ads(area_params, max_pages=None, start_page=1):
     session = requests.Session()
     session.headers.update(HEADERS)
     session.cookies.update(COOKIES)
     ads = []
 
-    page = 1
+    page = start_page
     while not max_pages or page <= max_pages:
         logger.info(f"[INFO] Pagina {page}")
-        AREA_PARAMS["pag"] = page
+        area_params["pag"] = page
 
-        response = session.get(BASE_URL, params=AREA_PARAMS)
+        response = session.get(BASE_URL, params=area_params)
         if response.status_code == 200:
             data = response.json()
             if max_pages is None:
@@ -124,21 +113,45 @@ def fetch_ads(max_pages=None):
     return df
 
 if __name__ == "__main__":
-    max_pages = input("Inserisci il numero massimo di pagine da scaricare (premi invio per tutte): ")
-    max_pages = int(max_pages) if max_pages.isdigit() else None
-    # debug load data
-    # with open("immob/api_immobiliare/data.json", "r") as f:
-    #     data = json.load(f)
+    params_mapper = {
+        "genova": {
+            "fkRegione": "lig",
+            "idProvincia": "GE",
+            "idNazione": "IT",
+            "idContratto": "1",
+            "idCategoria": "1",
+            "__lang": "it",
+            "pag": 1,
+            "paramsCount": 0,
+            "path": "/{contract}-case/genova-provincia/"
+        },
+        "savona": {
+            "fkRegione": "lig",
+            "idProvincia": "SV",
+            "idNazione": "IT",
+            "idContratto": "1",
+            "idCategoria": "1",
+            "__lang": "it",
+            "pag": 1,
+            "paramsCount": 0,
+            "path": "/{contract}-case/savona-provincia/"
+        },
+        # Add other cities and their parameters here
+    }
+    max_pages = None
+    start_page = 1
+    city = "savona"
     
-    # df = create_ads_dataframe(data["results"])
-    # df.to_csv("immob/api_immobiliare/ads.csv", index=False)
+    area_params = params_mapper.get(city, {})
+    area_params["path"] = area_params["path"].format(contract="vendita")
+    area_params["pag"] = start_page
+    logger.info(f"[INFO] Parametri di ricerca per {city}: {area_params}")
     
     db_path = "G:/My Drive/HobbyProjects/immob_scraping/ads_db.sqlite"
 
-    # max_pages = data.get("maxPages", 0)
-    df = fetch_ads(max_pages=max_pages)
+    df = fetch_ads(area_params, max_pages=max_pages, start_page=start_page)
     logger.info(f"[INFO] Numero di annunci trovati: {len(df)}")
     init_database(db_path)
     write_df_to_sqlite(df, db_path)
-    df.to_csv("immob/api_immobiliare/ads.csv", index=False)
+    df.to_csv("ads.csv", index=False)
     logger.info(f"[INFO] Dati inseriti nel database SQLite: {db_path}")

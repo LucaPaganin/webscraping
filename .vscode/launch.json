@@ -53,29 +53,6 @@
             }
         },
         {
-            "name": "[scrapy-spider]: immobit",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "scrapy",
-            "args": [
-                "crawl",
-                "immobit",
-                "-L", "DEBUG",
-                "--set=CLOSESPIDER_PAGECOUNT=3",
-                "--set=DOWNLOAD_DELAY=2",
-                "--set=COOKIES_DEBUG=True"
-            ],
-            "cwd": "${workspaceFolder}/immob",
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}/"
-            },
-            "presentation": {
-                "group": "Immobit",
-                "order": 1
-            }
-        },
-        {
             "name": "[scrapy]: immobit_selenium",
             "type": "debugpy",
             "request": "launch",
@@ -167,22 +144,19 @@
             }
         },
         {
-            "name": "[scrapy-shell]: immobiliare.it",
+            "name": "[immobit]: immobit api",
             "type": "debugpy",
             "request": "launch",
-            "module": "scrapy",
-            "args": [
-                "shell",
-                "https://www.immobiliare.it/annunci/120065826/"
-            ],
-            "cwd": "${workspaceFolder}/immob",
+            "program": "${workspaceFolder}/immob/api_immobiliare/fetch_ads.py",
+            "args": [],
+            "cwd": "${workspaceFolder}/immob/api_immobiliare",
             "justMyCode": false,
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/"
             },
             "presentation": {
                 "group": "Immobit",
-                "order": 6
+                "order": 1
             }
         },
         {
