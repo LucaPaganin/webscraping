@@ -4,3 +4,6 @@ pandas
 w3lib
 selenium
 webdriver-manager
+azure-cosmos
+pydantic
+requests
