@@ -41,11 +41,19 @@
             "name": "Streamlit: ebay/vinted scraper",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/.venv/Scripts/streamlit.exe",
             "args": [
                 "run",
                 "${workspaceFolder}/ebay/streamlit_scraper.py"
             ],
+            "windows": {
+                "program": "${workspaceFolder}/.venv/Scripts/streamlit.exe"
+            },
+            "linux": {
+                "program": "${workspaceFolder}/.venv/bin/streamlit"
+            },
+            "osx": {
+                "program": "${workspaceFolder}/.venv/bin/streamlit"
+            },
             "console": "integratedTerminal",
             "presentation": {
                 "group": "Streamlit",
