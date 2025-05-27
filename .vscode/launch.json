@@ -43,7 +43,7 @@
             "request": "launch",
             "args": [
                 "run",
-                "${workspaceFolder}/ebay/streamlit_scraper.py"
+                "${workspaceFolder}/ebay-vinted/streamlit_scraper.py"
             ],
             "windows": {
                 "program": "${workspaceFolder}/.venv/Scripts/streamlit.exe"
