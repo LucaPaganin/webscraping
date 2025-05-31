@@ -52,9 +52,9 @@ except ImportError:
     def get_user_agent():
         return random.choice(FALLBACK_USER_AGENTS)
 
-# Directory to save CSV files
-SAVE_DIR = Path("scraping_results")
-SAVE_DIR.mkdir(exist_ok=True) # Create directory if it doesn't exist
+# Session state keys for storing scraped data
+SESSION_DATA_KEY = "scraped_data"
+SESSION_METADATA_KEY = "scraping_metadata"
 
 # Basic logging configuration (optional but recommended)
 logging.basicConfig(level=logging.INFO,
@@ -344,6 +344,8 @@ def run_vinted_scraper(query, max_pages, start_search_url=None):
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--log-level=3')
 
     driver = webdriver.Chrome(options=chrome_options)
     if not start_search_url:
@@ -467,3 +469,43 @@ def run_vinted_scraper(query, max_pages, start_search_url=None):
     df = pd.DataFrame(results)
 
     return df
+
+# --- Session State Management Functions ---
+def store_data_in_session(df: pd.DataFrame, query: str, website: str, max_pages: int):
+    """Store scraped data in Streamlit session state with metadata."""
+    import datetime
+    
+    if df is not None and not df.empty:
+        st.session_state[SESSION_DATA_KEY] = df
+        st.session_state[SESSION_METADATA_KEY] = {
+            "query": query,
+            "website": website,
+            "max_pages": max_pages,
+            "timestamp": datetime.datetime.now(),
+            "num_records": len(df)
+        }
+        st.success(f"Data stored in session! {len(df)} records from {website} search for '{query}'")
+        return True
+    else:
+        st.warning("No data to store in session state.")
+        return False
+
+def get_data_from_session():
+    """Retrieve scraped data from Streamlit session state."""
+    if SESSION_DATA_KEY in st.session_state:
+        return st.session_state[SESSION_DATA_KEY], st.session_state.get(SESSION_METADATA_KEY, {})
+    return None, {}
+
+def clear_session_data():
+    """Clear scraped data from session state."""
+    if SESSION_DATA_KEY in st.session_state:
+        del st.session_state[SESSION_DATA_KEY]
+    if SESSION_METADATA_KEY in st.session_state:
+        del st.session_state[SESSION_METADATA_KEY]
+    st.success("Session data cleared!")
+
+def has_session_data():
+    """Check if there's scraped data in session state."""
+    return SESSION_DATA_KEY in st.session_state and st.session_state[SESSION_DATA_KEY] is not None
+
+# --- Functions ---

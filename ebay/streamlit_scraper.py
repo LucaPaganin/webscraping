@@ -8,9 +8,11 @@ import logging  # Import logging module
 from helpers import (
     run_ebay_scraper, 
     run_vinted_scraper,
-    extract_keywords, 
-    detect_language, 
-    SAVE_DIR
+    extract_keywords,
+    store_data_in_session,
+    get_data_from_session,
+    clear_session_data,
+    has_session_data
 )
 from streamlit_chatbot import chatbot_page
 
@@ -102,21 +104,9 @@ def plot_subpage(df: pd.DataFrame, data_source: str):
     st.plotly_chart(fig, use_container_width=True)
     
     if data_source == "Vinted":
-        cols = st.columns(3)
+        cols = st.columns(2)
         
         with cols[0]:
-            st.subheader("👅 Language Distribution")
-            language_counts = df['Language'].value_counts()
-            fig_pie = px.pie(
-                language_counts,
-                values=language_counts.values,
-                names=language_counts.index,
-                title="Language Distribution in Data",
-                color_discrete_sequence=px.colors.qualitative.Pastel
-            )
-            st.plotly_chart(fig_pie, use_container_width=True)
-        
-        with cols[1]:
             st.subheader("🔨 Condition Distribution")
             condition_counts = df['Condition'].value_counts()
             fig_condition_pie = px.pie(
@@ -127,8 +117,8 @@ def plot_subpage(df: pd.DataFrame, data_source: str):
                 color_discrete_sequence=px.colors.qualitative.Pastel
             )
             st.plotly_chart(fig_condition_pie, use_container_width=True)
-        
-        with cols[2]:
+
+        with cols[1]:
             st.subheader("📈 Price vs Favorites Correlation")
             if 'Price' in df.columns and 'Favorites' in df.columns:
                 fig_scatter = px.scatter(
@@ -158,7 +148,7 @@ def scraping_page():
     st.title("📊 Web Scraper & Price Analysis")
     st.markdown("""
     This application performs scraping of search results from various websites,
-    saves the data in a CSV file, and displays a price analysis.
+    stores the data in session state, and displays a price analysis.
     """)
 
     # --- Input Section ---
@@ -167,18 +157,41 @@ def scraping_page():
     max_pages_to_scrape = st.number_input("Maximum number of pages to analyze:", min_value=1, max_value=100, value=10,
                                     help="Set how many pages of results you want to analyze. More pages take more time.")
     start_button = st.button("Start Search / Load Data")
-    force_rerun = st.checkbox("Force new scraping even if the file exists", value=False, 
-                              help="Select to force new scraping even if the CSV file already exists.")
+    force_rerun = st.checkbox("Force new scraping", value=False, 
+                              help="Select to force new scraping and override any existing session data.")
     start_search_url = st.text_input("Search URL (optional):", placeholder="E.g.: https://www.ebay.com/sch/i.html?_nkw=nvidia+graphics+card")
     
-    sanitized_query = "".join(c if c.isalnum() else "_" for c in query)
-    filename = SAVE_DIR / f"{website}_{sanitized_query}.csv"
+    # Display current session data info if available
+    if has_session_data():
+        session_df, metadata = get_data_from_session()
+        st.info(f"📊 Session data available: {metadata.get('num_records', 0)} records from {metadata.get('website', 'Unknown')} "
+               f"search for '{metadata.get('query', 'Unknown')}' (scraped at {metadata.get('timestamp', 'Unknown')})")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Clear Session Data"):
+                clear_session_data()
+                st.rerun()
+        with col2:
+            if st.button("Use Session Data for Analysis"):
+                st.session_state['use_session_data'] = True
+                st.success("Session data will be used in Analysis page!")
 
     if start_button and query:
-        if not force_rerun and filename.exists():
-            st.write(f"The file '{filename}' already exists. Select 'Force new scraping' to overwrite.")
-            results_df = pd.read_csv(filename)
-            st.write(f"**Data loaded from '{filename}'!**")
+        # Check if we should use existing session data or scrape new data
+        if not force_rerun and has_session_data():
+            session_df, metadata = get_data_from_session()
+            if metadata.get('query') == query and metadata.get('website') == website:
+                st.write(f"Using existing session data for '{query}' on {website}.")
+                results_df = session_df
+                st.write(f"**Data loaded from session state!**")
+            else:
+                st.write("Query or website changed. Starting new scraping...")
+                with st.spinner(f"Processing for '{query}' on {website}... Please wait."):
+                    if website == "eBay":
+                        results_df = run_ebay_scraper(query, max_pages_to_scrape, start_search_url=start_search_url)
+                    elif website == "Vinted":
+                        results_df = run_vinted_scraper(query, max_pages_to_scrape, start_search_url=start_search_url)
         else:
             with st.spinner(f"Processing for '{query}' on {website}... Please wait."):
                 if website == "eBay":
@@ -190,6 +203,7 @@ def scraping_page():
             st.write(f"**Data successfully extracted from {website}!**")
             st.write(f"Number of records extracted: {len(results_df)}")
 
+            # Rename columns to standardized format
             results_df.rename(columns={
                 'Titolo': 'Title',
                 'Sottotitolo': 'Subtitle',
@@ -201,16 +215,9 @@ def scraping_page():
                 'Preferiti': 'Favorites',
                 'Note': 'Notes'
             }, inplace=True)
-
-            # st.write("Applying language detection to titles...")
-            # results_df['Language'] = results_df['Title'].apply(detect_language)
             
-            st.write("Saving data to a CSV file...")
-            try:
-                results_df.to_csv(filename, index=False)
-                st.success(f"Data successfully saved to '{filename}'")
-            except Exception as e:
-                st.error(f"Unable to save the CSV file '{filename}': {e}")
+            # Store data in session state instead of saving to CSV
+            store_data_in_session(results_df, query, website, max_pages_to_scrape)
 
             plot_subpage(results_df, website)
 
@@ -227,22 +234,17 @@ def filter_analysis_subpage(df: pd.DataFrame, data_source: str):
     st.subheader(f"🔍 Analysis of extracted data from {data_source}")
     st.write(f"This section is dedicated to analyzing the data extracted from {data_source}.")
     st.write(f"Number of records loaded: {len(df)}")
-    if "Language" not in df.columns:
-        st.write(f"Applying language detection to titles...")
-        df['Language'] = df['Title'].apply(detect_language)
-    else:
-        st.write(f"Column 'Language' already present. Skipping language detection.")
     
     if data_source == "eBay":    
         # Extract the last part of the URL before the query string and create a new column 'listing_id'
         df['listing_id'] = df['Link'].apply(lambda x: x.split('?')[0].split('/')[-1] if isinstance(x, str) else None)
         # Drop duplicates based on the 'listing_id' column
         df.drop_duplicates(subset=['listing_id'], inplace=True)
-        filter_columns = ["Title", "Subtitle", "Language"]
+        filter_columns = ["Title", "Subtitle"]
     elif data_source == "Vinted":
         # Drop duplicates based on the 'Link' column
         df.drop_duplicates(subset=['Link'], inplace=True)
-        filter_columns = ["Title", "Brand", "Condition", "Language"]
+        filter_columns = ["Title", "Brand", "Condition"]
 
     st.markdown(f"**Unique data after removing duplicates:** {len(df)} records")
     st.subheader(f"📄 Loaded Data Table: {len(df)} records")
@@ -377,18 +379,59 @@ def filter_dataframe_by_keywords(df: pd.DataFrame, filter_columns) -> pd.DataFra
 def analysis_and_filters_page():
     """Page logic for Analysis and Filters."""
     st.header("📂 Analysis and Filters")
+    
+    # Check for session data first
+    session_df, metadata = get_data_from_session()
+    has_session = has_session_data()
+    
+    if has_session:
+        st.success(f"📊 Session data available: {metadata.get('num_records', 0)} records from {metadata.get('website', 'Unknown')} "
+                  f"search for '{metadata.get('query', 'Unknown')}'")
+        
+        # Option to use session data or upload CSV
+        data_choice = st.radio(
+            "Choose data source:",
+            options=["Use Session Data", "Upload CSV File"],
+            help="Session data comes from the scraping page, or you can upload your own CSV file."
+        )
+        
+        if data_choice == "Use Session Data":
+            df = session_df.copy()
+            data_source = metadata.get('website', 'Unknown')
+            
+            if 'Price' in df.columns:
+                df['Price'] = pd.to_numeric(df['Price'], errors='coerce')
+                df.dropna(subset=['Price'], inplace=True)
+            
+            st.write(f"**Using session data from {data_source}!**")
+            st.write(f"Query: '{metadata.get('query', 'Unknown')}' | Records: {len(df)} | Scraped: {metadata.get('timestamp', 'Unknown')}")
+            
+            filtered_df = filter_analysis_subpage(df, data_source)
+            
+            st.write(f"Filtered results: {len(filtered_df)} out of {len(df)} total ({100*len(filtered_df)/len(df):.2f}%)")
+            st.dataframe(filtered_df, 
+                         use_container_width=True, 
+                         hide_index=True, 
+                         column_config={"Link": st.column_config.LinkColumn()})
+
+            plot_subpage(filtered_df, data_source)
+            return
+      # CSV upload section (when no session data or user chooses to upload)
+    if not has_session:
+        st.info("No session data available. Please run a search on the scraping page first, or upload a CSV file below.")
+        
     uploaded_file = st.file_uploader("Upload a CSV file with the data to analyze:", type=["csv"])
     data_source = st.selectbox("Select the data source:", ["eBay", "Vinted"], help="Choose the data source for analysis.")
+    
     if uploaded_file:
         try:
             df = pd.read_csv(uploaded_file)
             if 'Price' in df.columns:
                 df['Price'] = pd.to_numeric(df['Price'], errors='coerce')
                 df.dropna(subset=['Price'], inplace=True)
-            st.success("File successfully uploaded!")
+            st.success("File successfully uploaded! Using uploaded data.")
             
             filtered_df = filter_analysis_subpage(df, data_source)
-            
             
             st.write(f"Filtered results: {len(filtered_df)} out of {len(df)} total ({100*len(filtered_df)/len(df):.2f}%)")
             st.dataframe(filtered_df, 
@@ -400,6 +443,8 @@ def analysis_and_filters_page():
             
         except Exception as e:
             st.error(f"Error during file upload or processing: {e}")
+    elif not has_session:
+        st.warning("Please upload a CSV file or run a search on the scraping page first.")
 
 PAGES = {
     "🔍 Scraping and Analysis": scraping_page,
