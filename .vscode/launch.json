@@ -5,39 +5,6 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "[agent]: browser-user agent",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/browser_use/main.py",
-            "console": "integratedTerminal",
-            "presentation": {
-                "group": "agent",
-                "order": 1
-            }
-        },
-        {
-            "name": "Python: movie_downloader",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/moviedownloader/moviedownloader.py",
-            "console": "integratedTerminal",
-            "presentation": {
-                "group": "Movie Downloader",
-                "order": 1
-            }
-        },
-        {
-            "name": "Python: ebay scraper",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/ebay/scrape_main.py",
-            "console": "integratedTerminal",
-            "presentation": {
-                "group": "Ebay Scraper",
-                "order": 1
-            }
-        },
-        {
             "name": "Streamlit: ebay/vinted scraper",
             "type": "debugpy",
             "request": "launch",
@@ -61,97 +28,6 @@
             }
         },
         {
-            "name": "[scrapy]: immobit_selenium",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "scrapy",
-            "args": [
-                "crawl",
-                "immobit_selenium",
-                "-L", "DEBUG",
-                "--set=CLOSESPIDER_PAGECOUNT=3",
-                "--set=DOWNLOAD_DELAY=2",
-                "--set=COOKIES_DEBUG=True"
-            ],
-            "cwd": "${workspaceFolder}/immob",
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}/"
-            },
-            "presentation": {
-                "group": "Immobit",
-                "order": 2
-            }
-        },
-        {
-            "name": "[scrapy-spider]: immobit (single URL)",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "scrapy",
-            "args": [
-                "crawl",
-                "immobit",
-                "-L", "DEBUG",
-                "-a", "start_url=https://www.immobiliare.it/annunci/120065826/",
-                "--set=COOKIES_DEBUG=True",
-                "--set=ROBOTSTXT_OBEY=False",
-                "--set=CONCURRENT_REQUESTS=1",
-                "--set=DOWNLOAD_DELAY=5"
-            ],
-            "cwd": "${workspaceFolder}/immob",
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}/"
-            },
-            "presentation": {
-                "group": "Immobit",
-                "order": 3
-            }
-        },
-        {
-            "name": "[scrapy-spider]: immobit (with proxy)",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "scrapy",
-            "args": [
-                "crawl",
-                "immobit",
-                "-L", "DEBUG",
-                "-a", "start_url=https://www.immobiliare.it/annunci/120065826/",
-                "--set=COOKIES_DEBUG=True",
-                "--set=ROBOTSTXT_OBEY=False",
-                "--set=CONCURRENT_REQUESTS=1",
-                "--set=DOWNLOAD_DELAY=10",
-                "--set=PROXY_LIST=${workspaceFolder}/immob/proxies.txt",
-                "--set=PROXY_MODE=0"
-            ],
-            "cwd": "${workspaceFolder}/immob",
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}/"
-            },
-            "presentation": {
-                "group": "Immobit",
-                "order": 4
-            }
-        },
-        {
-            "name": "[selenium]: immobit",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/immob/selenium_simple_scraper.py",
-            "args": [],
-            "cwd": "${workspaceFolder}/immob",
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}/"
-            },
-            "presentation": {
-                "group": "Immobit",
-                "order": 5
-            }
-        },
-        {
             "name": "[immobit]: immobit api",
             "type": "debugpy",
             "request": "launch",
@@ -164,21 +40,6 @@
             },
             "presentation": {
                 "group": "Immobit",
-                "order": 1
-            }
-        },
-        {
-            "name": "[Crawl4AI]: test",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/test_ai_crawl/test_ai_crawl.py",
-            "cwd": "${workspaceFolder}/test_ai_crawl",
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}/"
-            },
-            "presentation": {
-                "group": "Crawl4AI",
                 "order": 1
             }
         },
@@ -197,29 +58,5 @@
                 "order": 1
             }
         },
-        {
-            "name": "[house_crawler]: Chrome",
-            "type": "chrome",
-            "request": "launch",
-            "url": "https://www.ebay.it/sch/i.html?_nkw=ps5&_sacat=0&_from=R40&_trksid=p4432023.m570.l1313",
-            "runtimeArgs": [
-                "--load-extension=${workspaceFolder}/house_crawler",
-                "--disk-cache-size=0",
-                "--media-cache-size=0",
-                "--disable-infobars",
-                // "--start-maximized",
-                "--user-data-dir=${workspaceFolder}/.chrome-profile",
-                // "--no-sandbox",
-                "--disable-dev-shm-usage",
-                "--disable-popup-blocking",
-                "--disable-extensions-except=${workspaceFolder}/house_crawler",
-                "--remote-debugging-port=9876",
-            ],
-            "presentation": {
-                "group": "house_crawler",
-                "order": 1
-            }
-        }
-
     ]
 }

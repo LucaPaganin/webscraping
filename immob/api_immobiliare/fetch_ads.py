@@ -25,11 +25,11 @@ load_dotenv(Path(__file__).resolve().parent / ".env")
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# # PARAMETRI COSMOS DB
-# COSMOS_ENDPOINT = os.environ["COSMOS_DB_ACCOUNT_URI"]
-# COSMOS_KEY = os.environ["COSMOS_DB_ACCOUNT_KEY"]
-# COSMOS_DB = os.environ["COSMOS_DB_DATABASE_NAME"]
-# COSMOS_CONTAINER = os.environ["COSMOS_DB_CONTAINER_NAME"]
+# PARAMETRI COSMOS DB
+COSMOS_ENDPOINT = os.environ["COSMOS_DB_ACCOUNT_URI"]
+COSMOS_KEY = os.environ["COSMOS_DB_ACCOUNT_KEY"]
+COSMOS_DB = os.environ["COSMOS_DB_DATABASE_NAME"]
+COSMOS_CONTAINER = os.environ["COSMOS_DB_CONTAINER_NAME"]
 
 # PARAMETRI DI RICERCA
 BASE_URL = "https://www.immobiliare.it/api-next/search-list/listings/"
