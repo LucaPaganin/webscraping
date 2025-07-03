@@ -28,15 +28,20 @@
             }
         },
         {
-            "name": "[immobit]: immobit api",
+            "name": "[immobit]: fetch_ads.py",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/immob/api_immobiliare/fetch_ads.py",
-            "args": [],
+            "args": [
+                "--save-json",
+                "--city", "savona",
+                "--contract", "rent",
+                "--max-pages", "-1",
+            ],
             "cwd": "${workspaceFolder}/immob/api_immobiliare",
             "justMyCode": false,
             "env": {
-                "PYTHONPATH": "${workspaceFolder}/"
+                "PYTHONPATH": "${workspaceFolder}/",
             },
             "presentation": {
                 "group": "Immobit",

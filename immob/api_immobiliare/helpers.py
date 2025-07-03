@@ -12,7 +12,7 @@ import pandas as pd
 def init_cosmos_client(endpoint: str, key: str, db_name: str, container_name: str):
     client = CosmosClient(endpoint, credential=key)
     db = client.get_database_client(db_name)
-    container = db.get_container_client(container_name)
+    container = db.create_container_if_not_exists(container_name, partition_key="city")
     return container
 
 # INSERIMENTO SINGOLO ANNUNCIO
@@ -23,9 +23,9 @@ def insert_ad(container: ContainerProxy, ad: RealEstateAd):
         # Convert UUID to string for Cosmos DB
         item['id'] = str(ad.uuid)
         container.upsert_item(item)
-        print(f"[OK] Inserito annuncio {ad.title}")
+        print(f"[OK] insterted ad '{ad.title}'")
     except exceptions.CosmosHttpResponseError as e:
-        print(f"[ERRORE] Inserimento fallito per {ad.title}: {e.message}")
+        print(f"[ERROR] insertion failed for ad '{ad.title}': {e.message}")
 
 # ESTRAZIONE DATI IN FORMATO PIATTO
 
@@ -196,7 +196,18 @@ def create_ads_dataframe(ads_list: list) -> pd.DataFrame:
     return df[sorted_columns]
 
 def transform_df_dtypes(df):
-    df['surface_m2'] = df.surface.apply(lambda s: int(s.split()[0]) if s else s)
+    def extract_surface_m2(s):
+        """Estrae il valore numerico della superficie da una stringa"""
+        if not s:
+            return None
+        try:
+            # Prende la prima parte della stringa e converte in intero
+            # es. "95 m²" -> 95
+            return int(s.split()[0])
+        except (ValueError, IndexError):
+            return None
+
+    df['surface_m2'] = df.surface.apply(extract_surface_m2)
 
     def cast_floor_number(f):
         if not isinstance(f, str):

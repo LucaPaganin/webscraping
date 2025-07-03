@@ -9,6 +9,51 @@ A Chrome extension for interactive web scraping of property listings.
 
 ### Real Estate Data Processing
 
+#### Immobiliare.it API Scraper
+A flexible scraper for retrieving real estate listings from immobiliare.it and storing them in various formats.
+
+Located in: `immob/api_immobiliare/fetch_ads.py`
+
+Features:
+- Scrapes property listings from immobiliare.it API
+- Configurable via command-line arguments and environment variables
+- Support for multiple cities and contract types (rent/sale)
+- Storage options:
+  - CSV files
+  - SQLite database
+  - Azure Cosmos DB
+- Configurable pagination and request delays
+
+Setup:
+1. Copy `.env.example` to `.env` and fill in your credentials (if using Cosmos DB)
+2. Install requirements: `pip install -r immob/api_immobiliare/requirements.txt`
+
+Example usage:
+```bash
+# Basic usage (saves to CSV by default)
+python fetch_ads.py
+
+# Specify city and contract type
+python fetch_ads.py --city genova --contract rent
+
+# Fetch multiple pages
+python fetch_ads.py --max-pages 5
+
+# Save to SQLite
+python fetch_ads.py --save-sqlite --sqlite-path ./my_database.db
+
+# Save to Cosmos DB (requires .env configuration)
+python fetch_ads.py --save-cosmos
+
+# Save to JSON file
+python fetch_ads.py --save-json
+
+# Combine options
+python fetch_ads.py --city savona --contract sale --max-pages 3 --save-sqlite --save-json --output-path ./data
+```
+
+See `immob/api_immobiliare/fetch_ads.py --help` for all options.
+
 #### SQLite Helper Functions
 The SQLite helper functions provide a convenient way to store and retrieve real estate data from web scraping results.
 

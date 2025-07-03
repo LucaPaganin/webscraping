@@ -1,2 +1,5 @@
-azure-cosmos
-pydantic
+azure-cosmos>=4.5.0
+pydantic>=2.0.0
+requests>=2.25.0
+pandas>=2.0.0
+python-dotenv>=0.20.0
