@@ -36,9 +36,9 @@ def load_env_vars():
         "COSMOS_DB": os.environ.get("COSMOS_DB_DATABASE_NAME", ""),
         "BASE_URL": os.environ.get("IMMOBILIARE_API_URL", "https://www.immobiliare.it/api-next/search-list/listings/"),
         "COOKIES": {
-            "PHPSESSID": os.environ.get("PHPSESSID", "261259b2f3205e4d8af334409e133608"),
+            "PHPSESSID": os.environ.get("PHPSESSID", "e5686b96fbe172ee7cd72d2fee24712d"),
             "IMMSESSID": os.environ.get("IMMSESSID", "e463dc3c67fb3bbc2073da5b3b8fcfed"),
-            "datadome": os.environ.get("DATADOME", "ZnImBoJV2dM48t4Iu5nU7ck38KHj3OHw9PdKsd5MGE8DG1uYGMQuPfajekYwosSQ47MmFDjX4eEd2U0hJeXzPivAOZgqzfdOeuwB7H0P2BA4_SmEookSrO85K9f4HRfV")
+            "datadome": os.environ.get("DATADOME", "raRTHfOWVs3UHHI0mL8JHd28BnmNGvrwoW0YQoe1OGWN0396cfnXqNZrH0efDY3YacgoqDuIrgM200pQSPu_HDzKNaXsJwGE6B2_cz_TqXauGiR04B_nuZPm7RCwmRt7")
         }
     }
     
@@ -192,7 +192,7 @@ def fetch_ads(area_params, base_url, headers=None, cookies=None, max_pages=None,
                 ads.append(item)
                 logger.info(f"[OK] fetched ad '{item['realEstate']['title']}'")
         else:
-            logger.info(f"[ERRORE] Status code {response.status_code}, interrotto.")
+            logger.info(f"[ERROR] status code {response.status_code}, response: {response.text}")
             break
 
         # Random delay between requests

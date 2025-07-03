@@ -34,7 +34,7 @@
             "program": "${workspaceFolder}/immob/api_immobiliare/fetch_ads.py",
             "args": [
                 "--save-json",
-                "--city", "savona",
+                "--city", "imperia",
                 "--contract", "rent",
                 "--max-pages", "-1",
             ],
