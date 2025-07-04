@@ -50,6 +50,28 @@
             }
         },
         {
+            "name": "[immobit]: upload_csv_to_cosmos.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/immob/api_immobiliare/upload_csv_to_cosmos.py",
+            "cwd": "${workspaceFolder}/immob/api_immobiliare",
+            "justMyCode": false,
+            "args": [
+                "--container", "ads_rent",
+                "--city", "genova",
+                "--batch-size", "50",
+                "--report",
+                "${workspaceFolder}/immob/api_immobiliare/ads_genova_rent.csv"
+            ],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/"
+            },
+            "presentation": {
+                "group": "Immobit",
+                "order": 2
+            }
+        },
+        {
             "name": "[autogen]: test",
             "type": "debugpy",
             "request": "launch",

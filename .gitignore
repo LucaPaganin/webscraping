@@ -1,18 +1,17 @@
 #Custom
-*.ipynb*
 appendvalues*.json
 items.jsonl
 .DS_Store
 ebay_results
 scraping_results
 .chrome-profile/
-ads_*.json
-ads_*.csv
-ads_*.jsonl
-ads_*.sqlite
-ads_*.db
-ads_*.parquet
-ads_*.xlsx
+ads*.json
+ads*.csv
+ads*.jsonl
+ads*.sqlite
+ads*.db
+ads*.parquet
+ads*.xlsx
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
