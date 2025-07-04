@@ -34,8 +34,9 @@
             "program": "${workspaceFolder}/immob/api_immobiliare/fetch_ads.py",
             "args": [
                 "--save-json",
-                "--city", "imperia",
-                "--contract", "rent",
+                "--city", "genova",
+                "--comune-query", "genova",
+                "--contract", "sale",
                 "--max-pages", "-1",
             ],
             "cwd": "${workspaceFolder}/immob/api_immobiliare",

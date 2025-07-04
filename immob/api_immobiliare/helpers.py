@@ -12,7 +12,7 @@ import pandas as pd
 def init_cosmos_client(endpoint: str, key: str, db_name: str, container_name: str):
     client = CosmosClient(endpoint, credential=key)
     db = client.get_database_client(db_name)
-    container = db.create_container_if_not_exists(container_name, partition_key="city")
+    container = db.create_container_if_not_exists(container_name, partition_key="/city")
     return container
 
 # INSERIMENTO SINGOLO ANNUNCIO

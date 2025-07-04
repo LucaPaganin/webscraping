@@ -6,6 +6,13 @@ items.jsonl
 ebay_results
 scraping_results
 .chrome-profile/
+ads_*.json
+ads_*.csv
+ads_*.jsonl
+ads_*.sqlite
+ads_*.db
+ads_*.parquet
+ads_*.xlsx
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

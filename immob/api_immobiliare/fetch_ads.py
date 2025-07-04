@@ -23,6 +23,20 @@ from pathlib import Path
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+logging.getLogger("azure.cosmos").setLevel(logging.WARNING)  # Suppress Cosmos SDK logs
+logging.getLogger("pydantic").setLevel(logging.WARNING)  # Suppress Pydantic validation logs
+
+# Load common cities from JSON file
+COMMON_CITIES_FILE = Path(__file__).resolve().parent / "common_cities.json"
+try:
+    with open(COMMON_CITIES_FILE, 'r', encoding='utf-8') as f:
+        COMMON_CITIES = json.load(f)
+    logger.debug(f"Loaded {len(COMMON_CITIES)} cities from {COMMON_CITIES_FILE}")
+except Exception as e:
+    logger.error(f"Error loading common_cities.json: {e}")
+    # Fallback to an empty dictionary if the file cannot be loaded
+    COMMON_CITIES = {}
+
 # Load environment variables
 def load_env_vars():
     """Load environment variables from .env file"""
@@ -58,13 +72,121 @@ DEFAULT_HEADERS = {
 }
 
 # Parameters mapper for different cities
-def get_params_mapper(contract_type):
+def get_comune_id_by_name(query):
+    """
+    Retrieve the idComune for a given search query using Immobiliare.it's autocomplete API.
+    
+    Args:
+        query: The name of the comune/city to search for
+        
+    Returns:
+        Dictionary containing idComune, name, and path if found, None otherwise
+    """
+    # Use the global COMMON_CITIES dictionary loaded from the JSON file
+    
+    # First check if query matches a common city directly
+    query_lower = query.lower().strip()
+    if query_lower in COMMON_CITIES:
+        city_info = COMMON_CITIES[query_lower]
+        logger.info(f"[INFO] Found comune from local database: {city_info['name']} (ID: {city_info['idComune']})")
+        return city_info
+    
+    # Try multiple API endpoints to increase chance of success
+    urls = [
+        f"https://www.immobiliare.it/api-next/geography/autocomplete/?query={query}"
+    ]
+    
+    # Common headers to avoid bot detection
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'application/json',
+        'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Referer': 'https://www.immobiliare.it/',
+        'Origin': 'https://www.immobiliare.it',
+        'Connection': 'keep-alive',
+        'sec-ch-ua': '"Not A;Brand";v="99", "Chromium";v="101"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"'
+    }
+    
+    # Try API endpoints
+    for url in urls:
+        try:
+            logger.info(f"[INFO] Querying comune search API: {url}")
+            response = requests.get(url, headers=headers, timeout=15)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # First API format
+                if "results" in data:
+                    for item in data.get("results", []):
+                        if item.get("type") == "comune":
+                            comune_info = {
+                                "idComune": item.get("id"),
+                                "name": item.get("name"),
+                                "path": item.get("url", f"/{item.get('name', '').lower().replace(' ', '-')}/")
+                            }
+                            logger.info(f"[INFO] Found comune from API: {comune_info['name']} (ID: {comune_info['idComune']})")
+                            return comune_info
+                
+                # Second API format
+                elif "comune_id" in str(data):
+                    for item in data.get("results", []):
+                        if item.get("type") == "comune":
+                            comune_id = item.get("comune_id")
+                            comune_name = item.get("text", "")
+                            path = f"/{comune_name.lower().replace(' ', '-')}/"
+                            
+                            comune_info = {
+                                "idComune": str(comune_id),
+                                "name": comune_name,
+                                "path": path,
+                                "provincia_id": item.get("provincia_id"),
+                                "regione_id": item.get("regione_id")
+                            }
+                            logger.info(f"[INFO] Found comune from API: {comune_info['name']} (ID: {comune_info['idComune']})")
+                            return comune_info
+            
+            logger.warning(f"[WARNING] API returned status code {response.status_code} for {url}")
+            
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"[WARNING] Error with {url}: {e}")
+    
+    # Fuzzy match with common cities as a last resort
+    best_match = None
+    best_score = 0
+    for city, info in COMMON_CITIES.items():
+        similarity = 0
+        query_parts = query_lower.split()
+        city_parts = city.split()
+        
+        # Simple matching algorithm
+        for qp in query_parts:
+            for cp in city_parts:
+                if qp in cp or cp in qp:
+                    similarity += 1
+        
+        if similarity > best_score:
+            best_score = similarity
+            best_match = info
+    
+    if best_match and best_score > 0:
+        logger.info(f"[INFO] Found closest matching comune: {best_match['name']} (ID: {best_match['idComune']})")
+        return best_match
+    
+    logger.warning(f"[WARNING] No comune found for query: {query}")
+    return None
+
+def get_params_mapper(contract_type, comune_id=None, comune_name=None):
     """
     Get the parameters mapper for different cities based on contract type.
     
     Args:
         contract_type: 'rent' or 'sale'
-    
+        comune_id: Optional idComune parameter
+        comune_name: Optional name of the comune for path construction
+        
     Returns:
         Dictionary mapping city names to API parameters
     """
@@ -74,6 +196,23 @@ def get_params_mapper(contract_type):
     else:  # sale
         path_start = "vendita-case"
         id_contratto = "1"
+    
+    # If comune_id is provided, create a custom entry for it
+    if comune_id and comune_name:
+        formatted_name = comune_name.lower().replace(' ', '-')
+        return {
+            comune_name.lower(): {
+                "fkRegione": None,  # Will be determined by the API
+                "idNazione": "IT",
+                "idComune": comune_id,
+                "idContratto": id_contratto,
+                "idCategoria": "1",
+                "__lang": "it",
+                "pag": 1,
+                "paramsCount": 0,
+                "path": f"/{path_start}/{formatted_name}/"
+            }
+        }
         
     return {
         "genova": {
@@ -211,9 +350,13 @@ def process_ads(config):
     Args:
         config: Dictionary containing configuration parameters
     """
+    
+    
     contract_type = config.get("contract_type", "rent")
     cosmos_container_name = f"ads_{contract_type}"
     city = config.get("city", "genova")
+    comune_id = config.get("comune_id")
+    comune_name = config.get("comune_name")
     max_pages = config.get("max_pages", 1)
     start_page = config.get("start_page", 1)
     base_url = config.get("base_url")
@@ -222,18 +365,27 @@ def process_ads(config):
     cosmos_endpoint = config.get("cosmos_endpoint", "")
     cosmos_key = config.get("cosmos_key", "")
     cosmos_db = config.get("cosmos_db", "")
-    output_path = config.get("output_path", ".")
+    output_path = config.get(
+        "output_path", 
+        str(
+            Path(os.getenv("WINDOWS_HOME", Path.home())) / "onedrive_unige/data/immobiliare.it"
+        )
+    )
     save_to_cosmos = config.get("save_to_cosmos", True)
     save_to_sqlite = config.get("save_to_sqlite", False)
     save_to_csv = config.get("save_to_csv", True)
     save_to_json = config.get("save_to_json", False)
     sqlite_db_path = config.get("sqlite_db_path", f"{output_path}/ads.db")
     
-    # Get parameters mapper for the selected contract type
-    params_mapper = get_params_mapper(contract_type)
+    # Get parameters mapper for the selected contract type, with comune details if provided
+    params_mapper = get_params_mapper(contract_type, comune_id, comune_name)
     
     # Get the parameters for the selected city
-    area_params = params_mapper.get(city, {})
+    area_params = params_mapper.get(city.lower(), {})
+    if not area_params:
+        logger.error(f"[ERROR] No parameters found for city: {city}")
+        return pd.DataFrame()  # Return empty DataFrame if no parameters found
+        
     area_params["pag"] = start_page
     logger.info(f"[INFO] Parametri di ricerca per {city}: {area_params}")
     
@@ -249,43 +401,65 @@ def process_ads(config):
     logger.info(f"[INFO] Numero di annunci trovati: {len(df)}")
     
     # Clean the DataFrame for export to ensure consistency across formats
-    clean_df = clean_dataframe_for_export(df)
+    try:
+        clean_df = clean_dataframe_for_export(df)
+        logger.info(f"[INFO] DataFrame preparato per l'esportazione ({len(clean_df)} record)")
+    except Exception as e:
+        logger.error(f"[ERRORE] Preparazione del DataFrame fallita: {e}")
+        # Create an empty DataFrame as fallback if cleaning fails
+        clean_df = pd.DataFrame()
     
-    # Save to Cosmos DB if requested
+    # Store operation results for summary
+    results = {
+        "cosmos_db": {"attempted": False, "success": False, "records": 0, "error": None},
+        "sqlite": {"attempted": False, "success": False, "new": 0, "updated": 0, "error": None},
+        "csv": {"attempted": False, "success": False, "file": None, "error": None},
+        "json": {"attempted": False, "success": False, "file": None, "error": None}
+    }
+    
+    # Save to Cosmos DB if requested - independent try/except
     if save_to_cosmos and cosmos_endpoint and cosmos_key and cosmos_db:
-        # Initialize Cosmos DB client
-        container_client = init_cosmos_client(cosmos_endpoint, cosmos_key, cosmos_db, cosmos_container_name)
-        logger.info(f"[INFO] Client Cosmos DB inizializzato per il container: {cosmos_container_name}")
-        
-        # Convert cleaned DataFrame to records for insertion
-        records = clean_df.to_dict('records')
-        
-        # Add ID and partition key for Cosmos DB
-        for record in records:
-            if 'uuid' in record and record['uuid']:
-                record['id'] = str(record['uuid'])  # Cosmos DB requires a unique ID
-            else:
-                record['id'] = str(uuid.uuid4())    # Generate UUID if not present
+        results["cosmos_db"]["attempted"] = True
+        try:
+            # Initialize Cosmos DB client
+            container_client = init_cosmos_client(cosmos_endpoint, cosmos_key, cosmos_db, cosmos_container_name)
+            logger.info(f"[INFO] Client Cosmos DB inizializzato per il container: {cosmos_container_name}")
             
-            # Ensure partition key (city) is present
-            if 'city' not in record or not record['city']:
-                record['city'] = city  # Use current city as fallback
-        
-        # Insert records into Cosmos DB
-        successful_inserts = 0
-        for i, record in enumerate(records):
-            try:
-                container_client.upsert_item(body=record)
-                successful_inserts += 1
-                if i % 10 == 0:  # Log every 10 records to avoid flooding the logs
-                    logger.info(f"[INFO] Inserito record {i+1}/{len(records)}")
-            except Exception as e:
-                logger.error(f"[ERRORE] Inserimento fallito per record {i+1}: {e}")
-        
-        logger.info(f"[INFO] Inserimento completato. {successful_inserts}/{len(records)} record inseriti in Cosmos DB")
+            # Convert cleaned DataFrame to records for insertion
+            records = clean_df.to_dict('records')
+            
+            # Add ID and partition key for Cosmos DB
+            for record in records:
+                if 'uuid' in record and record['uuid']:
+                    record['id'] = str(record['uuid'])  # Cosmos DB requires a unique ID
+                else:
+                    record['id'] = str(uuid.uuid4())    # Generate UUID if not present
+                
+                # Ensure partition key (city) is present
+                if 'city' not in record or not record['city']:
+                    record['city'] = city  # Use current city as fallback
+            
+            # Insert records into Cosmos DB
+            successful_inserts = 0
+            for i, record in enumerate(records):
+                try:
+                    container_client.upsert_item(body=record)
+                    successful_inserts += 1
+                    if i % 10 == 0 or i == len(records) - 1:  # Log every 10 records and the last one
+                        logger.info(f"[INFO] Inserito record {i+1}/{len(records)}")
+                except Exception as record_e:
+                    logger.error(f"[ERRORE] Inserimento fallito per record {i+1}: {record_e}")
+            
+            logger.info(f"[INFO] Inserimento completato. {successful_inserts}/{len(records)} record inseriti in Cosmos DB")
+            results["cosmos_db"]["success"] = True
+            results["cosmos_db"]["records"] = successful_inserts
+        except Exception as e:
+            logger.error(f"[ERRORE] Salvataggio in Cosmos DB fallito: {e}")
+            results["cosmos_db"]["error"] = str(e)
     
-    # Save to SQLite if requested
+    # Save to SQLite if requested - independent try/except
     if save_to_sqlite:
+        results["sqlite"]["attempted"] = True
         try:
             # Initialize the database if it doesn't exist
             init_database(sqlite_db_path)
@@ -293,20 +467,29 @@ def process_ads(config):
             # Write cleaned DataFrame to SQLite
             new_records, updated_records = write_df_to_sqlite(clean_df, sqlite_db_path, replace_existing=True)
             logger.info(f"[INFO] SQLite: {new_records} nuovi record, {updated_records} record aggiornati")
+            results["sqlite"]["success"] = True
+            results["sqlite"]["new"] = new_records
+            results["sqlite"]["updated"] = updated_records
         except Exception as e:
-            logger.error(f"[ERRORE] Errore durante il salvataggio in SQLite: {e}")
+            logger.error(f"[ERRORE] Salvataggio in SQLite fallito: {e}")
+            results["sqlite"]["error"] = str(e)
     
-    # Save to CSV if requested
+    # Save to CSV if requested - independent try/except
     if save_to_csv:
+        results["csv"]["attempted"] = True
         try:
             output_filename = f"{output_path}/ads_{city}_{contract_type}.csv"
             clean_df.to_csv(output_filename, index=False)
             logger.info(f"[INFO] Dati salvati nel file CSV: {output_filename}")
+            results["csv"]["success"] = True
+            results["csv"]["file"] = output_filename
         except Exception as e:
-            logger.error(f"[ERRORE] Errore durante il salvataggio in CSV: {e}")
+            logger.error(f"[ERRORE] Salvataggio in CSV fallito: {e}")
+            results["csv"]["error"] = str(e)
     
-    # Save to JSON if requested
+    # Save to JSON if requested - independent try/except
     if save_to_json:
+        results["json"]["attempted"] = True
         try:
             # Convert cleaned DataFrame to list of dictionaries
             records = clean_df.to_dict('records')
@@ -316,41 +499,71 @@ def process_ads(config):
                 json.dump(records, f, ensure_ascii=False, indent=2)
                 
             logger.info(f"[INFO] Dati salvati nel file JSON: {json_filename}")
+            results["json"]["success"] = True
+            results["json"]["file"] = json_filename
         except Exception as e:
-            logger.error(f"[ERRORE] Errore durante il salvataggio in JSON: {e}")
+            logger.error(f"[ERRORE] Salvataggio in JSON fallito: {e}")
+            results["json"]["error"] = str(e)
+    
+    # Log summary of all operations
+    logger.info("[RIEPILOGO OPERAZIONI]")
+    if results["cosmos_db"]["attempted"]:
+        status = "✓ Successo" if results["cosmos_db"]["success"] else f"✗ Fallito ({results['cosmos_db']['error']})"
+        logger.info(f"- Cosmos DB: {status}")
+    if results["sqlite"]["attempted"]:
+        status = "✓ Successo" if results["sqlite"]["success"] else f"✗ Fallito ({results['sqlite']['error']})"
+        logger.info(f"- SQLite: {status}")
+    if results["csv"]["attempted"]:
+        status = "✓ Successo" if results["csv"]["success"] else f"✗ Fallito ({results['csv']['error']})"
+        logger.info(f"- CSV: {status}")
+    if results["json"]["attempted"]:
+        status = "✓ Successo" if results["json"]["success"] else f"✗ Fallito ({results['json']['error']})"
+        logger.info(f"- JSON: {status}")
     
     return df
 
 def parse_arguments():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description='Fetch real estate ads from immobiliare.it')
-    parser.add_argument('--city', '-c', type=str, default='genova',
+    
+    # Location parameters
+    location_group = parser.add_argument_group('Location parameters')
+    location_group.add_argument('--city', '-c', type=str, default='genova',
                         help='City to search for ads (default: genova)')
+    location_group.add_argument('--comune-query', type=str, default=None,
+                        help='Search query to find a comune by name. This will override --city if specified.')
+    location_group.add_argument('--comune-id', type=str, default=None,
+                        help='Specify idComune directly. Use together with --comune-name. This will override --city and --comune-query if specified.')
+    location_group.add_argument('--comune-name', type=str, default=None,
+                        help='Name of the comune when specifying comune-id. Required if using --comune-id.')
+    
+    # Contract and pagination parameters
     parser.add_argument('--contract', '-t', type=str, choices=['rent', 'sale'], default='rent',
                         help='Contract type: rent or sale (default: rent)')
     parser.add_argument('--max-pages', '-m', type=lambda x: int(x) if x else None, default=1,
                         help='Maximum number of pages to fetch (default: 1)')
     parser.add_argument('--start-page', '-s', type=int, default=1,
                         help='Page to start fetching from (default: 1)')
-    parser.add_argument('--output-path', '-o', type=str, default='.',
+    
+    # Output parameters
+    output_group = parser.add_argument_group('Output parameters')
+    output_group.add_argument('--output-path', '-o', type=str, default='.',
                         help='Path where to save the output files (default: current directory)')
-    parser.add_argument('--no-save-cosmos', action='store_false', dest='save_cosmos', default=True,
+    output_group.add_argument('--no-save-cosmos', action='store_false', dest='save_cosmos', default=True,
                         help='Do not save data to Cosmos DB')
-    parser.add_argument('--save-sqlite', action='store_true', default=False,
-                        help='Save data to SQLite database')
-    parser.add_argument('--save-csv', action='store_true', default=True,
+    output_group.add_argument('--no-save-sqlite', action='store_false', dest='save_sqlite', default=True,
+                        help='Do not save data to SQLite database')
+    output_group.add_argument('--save-csv', action='store_true', default=True,
                         help='Save data to CSV file')
-    parser.add_argument('--save-json', action='store_true', default=False,
+    output_group.add_argument('--save-json', action='store_true', default=False,
                         help='Save data to JSON file as a list of dictionaries')
-    parser.add_argument('--sqlite-path', type=str, default=None,
+    output_group.add_argument('--sqlite-path', type=str, default=None,
                         help='Path to SQLite database file (default: output-path/ads.db)')
     
     return parser.parse_args()
 
-if __name__ == "__main__":
-    # Parse command-line arguments
-    args = parse_arguments()
-    
+def main(args: argparse.Namespace):
+    # Main logic for fetching ads goes here
     # Load environment variables
     env_vars = load_env_vars()
     
@@ -358,10 +571,35 @@ if __name__ == "__main__":
     if max_pages is None or max_pages <= 0:
         max_pages = None
     
+    # Determine comune information based on arguments
+    comune_id = None
+    comune_name = None
+    city = args.city
+    
+    # First check for direct comune ID specification
+    if args.comune_id and args.comune_name:
+        comune_id = args.comune_id
+        comune_name = args.comune_name
+        city = args.comune_name.lower()
+        logger.info(f"[INFO] Using specified comune: {comune_name} (ID: {comune_id})")
+    # Then check for comune query search
+    elif args.comune_query:
+        logger.info(f"[INFO] Searching for comune: {args.comune_query}")
+        comune_info = get_comune_id_by_name(args.comune_query)
+        if comune_info:
+            comune_id = comune_info["idComune"]
+            comune_name = comune_info["name"]
+            city = comune_name.lower()
+            logger.info(f"[INFO] Found comune: {comune_name} (ID: {comune_id})")
+        else:
+            logger.warning(f"[WARNING] Comune not found for query: {args.comune_query}. Using default city: {city}")
+    
     # Build configuration from args and env vars
     config = {
         "contract_type": args.contract,
-        "city": args.city,
+        "city": city,
+        "comune_id": comune_id,
+        "comune_name": comune_name,
         "max_pages": max_pages,
         "start_page": args.start_page,
         "output_path": args.output_path,
@@ -385,3 +623,11 @@ if __name__ == "__main__":
     df = process_ads(config)
     
     logger.info("[INFO] Elaborazione completata con successo.")
+    
+    return df
+
+if __name__ == "__main__":
+    # Parse command-line arguments
+    args = parse_arguments()
+    
+    main(args)
