@@ -1,17 +1,44 @@
 {
-    "genova": {"idComune": "6846", "name": "Genova", "path": "/genova/"},
-    "rapallo": {"idComune": "6887", "name": "Rapallo", "path": "/rapallo/"},
-    "savona": {"idComune": "7043", "name": "Savona", "path": "/savona/"},
-    "vado_ligure": {"idComune": "7051", "name": "Vado Ligure", "path": "/vado-ligure/"},
-    "milano": {"idComune": "8042", "name": "Milano", "path": "/milano/"},
-    "roma": {"idComune": "1730", "name": "Roma", "path": "/roma/"},
-    "torino": {"idComune": "1308", "name": "Torino", "path": "/torino/"},
-    "napoli": {"idComune": "1059", "name": "Napoli", "path": "/napoli/"},
-    "bologna": {"idComune": "3698", "name": "Bologna", "path": "/bologna/"},
-    "firenze": {"idComune": "3046", "name": "Firenze", "path": "/firenze/"},
-    "bari": {"idComune": "5279", "name": "Bari", "path": "/bari/"},
-    "catania": {"idComune": "6830", "name": "Catania", "path": "/catania/"},
-    "venezia": {"idComune": "2158", "name": "Venezia", "path": "/venezia/"},
-    "verona": {"idComune": "2657", "name": "Verona", "path": "/verona/"},
-    "palermo": {"idComune": "6537", "name": "Palermo", "path": "/palermo/"}
+    "genova": {
+        "idComune": "6846", 
+        "name": "Genova", 
+        "path": "/genova/",
+        "macrozones": {
+            "centro": {"id": "10001", "name": "Centro"},
+            "foce": {"id": "10002", "name": "Foce"},
+            "castelletto": {"id": "10003", "name": "Castelletto"},
+            "marassi": {"id": "10004", "name": "Marassi"},
+            "sampierdarena": {"id": "10005", "name": "Sampierdarena"}
+        }
+    },
+    "vado_ligure": {
+        "idComune": "7051", 
+        "name": "Vado Ligure", 
+        "path": "/vado-ligure/",
+        "macrozones": {
+            "centro": {"id": "20001", "name": "Centro"},
+            "valle": {"id": "20002", "name": "Valle di Vado"}
+        }
+    },
+    "rapallo": {
+        "idComune": "6887", 
+        "name": "Rapallo", 
+        "path": "/rapallo/",
+        "macrozones": {
+            "centro": {"id": "30001", "name": "Centro"},
+            "san_michele": {"id": "30002", "name": "San Michele di Pagana"},
+            "santa_maria": {"id": "30003", "name": "Santa Maria del Campo"}
+        }
+    },
+    "savona": {
+        "idComune": "7043", 
+        "name": "Savona", 
+        "path": "/savona/",
+        "macrozones": {
+            "centro": {"id": "40001", "name": "Centro"},
+            "darsena": {"id": "40002", "name": "Darsena"},
+            "fornaci": {"id": "40003", "name": "Fornaci"},
+            "villapiana": {"id": "40004", "name": "Villapiana"}
+        }
+    }
 }

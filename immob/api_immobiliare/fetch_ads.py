@@ -178,7 +178,7 @@ def get_comune_id_by_name(query):
     logger.warning(f"[WARNING] No comune found for query: {query}")
     return None
 
-def get_params_mapper(contract_type, comune_id=None, comune_name=None):
+def get_params_mapper(contract_type, comune_id=None, comune_name=None, macrozones=None):
     """
     Get the parameters mapper for different cities based on contract type.
     
@@ -186,6 +186,7 @@ def get_params_mapper(contract_type, comune_id=None, comune_name=None):
         contract_type: 'rent' or 'sale'
         comune_id: Optional idComune parameter
         comune_name: Optional name of the comune for path construction
+        macrozones: Optional list of macrozone IDs to filter results
         
     Returns:
         Dictionary mapping city names to API parameters
@@ -200,21 +201,29 @@ def get_params_mapper(contract_type, comune_id=None, comune_name=None):
     # If comune_id is provided, create a custom entry for it
     if comune_id and comune_name:
         formatted_name = comune_name.lower().replace(' ', '-')
-        return {
-            comune_name.lower(): {
-                "fkRegione": None,  # Will be determined by the API
-                "idNazione": "IT",
-                "idComune": comune_id,
-                "idContratto": id_contratto,
-                "idCategoria": "1",
-                "__lang": "it",
-                "pag": 1,
-                "paramsCount": 0,
-                "path": f"/{path_start}/{formatted_name}/"
-            }
+        params = {
+            "fkRegione": None,  # Will be determined by the API
+            "idNazione": "IT",
+            "idComune": comune_id,
+            "idContratto": id_contratto,
+            "idCategoria": "1",
+            "__lang": "it",
+            "pag": 1,
+            "paramsCount": 0,
+            "path": f"/{path_start}/{formatted_name}/"
         }
         
-    return {
+        # Add macrozones if provided
+        if macrozones and len(macrozones) > 0:
+            params["idMicrozona"] = ",".join(macrozones)
+            params["paramsCount"] += 1
+            logger.info(f"[INFO] Added macrozones filter: {macrozones}")
+        
+        return {
+            comune_name.lower(): params
+        }
+    
+    base_params = {
         "genova": {
             "fkRegione": "lig",
             "idProvincia": "GE",
@@ -239,6 +248,16 @@ def get_params_mapper(contract_type, comune_id=None, comune_name=None):
         },
         # Add other cities and their parameters here
     }
+    
+    # If macrozones are provided, add them to the parameters
+    if macrozones and len(macrozones) > 0:
+        for city_name, params in base_params.items():
+            params["idMicrozona"] = ",".join(macrozones)
+            params["paramsCount"] += 1
+            
+        logger.info(f"[INFO] Added macrozones filter: {macrozones}")
+    
+    return base_params
 
 # FETCH E UPLOAD
 
@@ -357,6 +376,7 @@ def process_ads(config):
     city = config.get("city", "genova")
     comune_id = config.get("comune_id")
     comune_name = config.get("comune_name")
+    macrozones = config.get("macrozones", [])
     max_pages = config.get("max_pages", 1)
     start_page = config.get("start_page", 1)
     base_url = config.get("base_url")
@@ -378,7 +398,7 @@ def process_ads(config):
     sqlite_db_path = config.get("sqlite_db_path", f"{output_path}/ads.db")
     
     # Get parameters mapper for the selected contract type, with comune details if provided
-    params_mapper = get_params_mapper(contract_type, comune_id, comune_name)
+    params_mapper = get_params_mapper(contract_type, comune_id, comune_name, macrozones)
     
     # Get the parameters for the selected city
     area_params = params_mapper.get(city.lower(), {})
@@ -536,6 +556,12 @@ def parse_arguments():
                         help='Specify idComune directly. Use together with --comune-name. This will override --city and --comune-query if specified.')
     location_group.add_argument('--comune-name', type=str, default=None,
                         help='Name of the comune when specifying comune-id. Required if using --comune-id.')
+    location_group.add_argument('--macrozones', type=str, nargs='+', default=[],
+                        help='List of macrozone IDs to filter results. Example: --macrozones 10001 10002 (for specific zones in a city)')
+    location_group.add_argument('--macrozone-names', type=str, nargs='+', default=[],
+                        help='List of macrozone names to filter results. Will be converted to IDs if city info is available. Example: --macrozone-names centro foce')
+    location_group.add_argument('--list-macrozones', action='store_true',
+                        help='List available macrozones for the selected city and exit')
     
     # Contract and pagination parameters
     parser.add_argument('--contract', '-t', type=str, choices=['rent', 'sale'], default='rent',
@@ -562,6 +588,37 @@ def parse_arguments():
     
     return parser.parse_args()
 
+def list_macrozones(city):
+    """
+    List available macrozones for a given city.
+    
+    Args:
+        city: Name of the city to list macrozones for
+        
+    Returns:
+        True if macrozones were found and listed, False otherwise
+    """
+    if not city:
+        logger.error("[ERROR] No city provided to list macrozones")
+        return False
+    
+    city_lower = city.lower()
+    
+    if city_lower not in COMMON_CITIES:
+        logger.error(f"[ERROR] City '{city}' not found in common cities database")
+        return False
+    
+    city_info = COMMON_CITIES[city_lower]
+    if "macrozones" not in city_info or not city_info["macrozones"]:
+        logger.error(f"[ERROR] No macrozones defined for city '{city}'")
+        return False
+    
+    logger.info(f"\n[INFO] Available macrozones for {city_info['name']} (ID: {city_info['idComune']}):")
+    for key, macrozone in city_info["macrozones"].items():
+        logger.info(f"  - {macrozone['name']} (ID: {macrozone['id']}, Key: {key})")
+    
+    return True
+
 def main(args: argparse.Namespace):
     # Main logic for fetching ads goes here
     # Load environment variables
@@ -575,6 +632,7 @@ def main(args: argparse.Namespace):
     comune_id = None
     comune_name = None
     city = args.city
+    macrozones = args.macrozones.copy() if args.macrozones else []
     
     # First check for direct comune ID specification
     if args.comune_id and args.comune_name:
@@ -594,12 +652,30 @@ def main(args: argparse.Namespace):
         else:
             logger.warning(f"[WARNING] Comune not found for query: {args.comune_query}. Using default city: {city}")
     
+    # Look up macrozone names if provided and convert to IDs
+    if args.macrozone_names and city.lower() in COMMON_CITIES:
+        city_info = COMMON_CITIES[city.lower()]
+        if "macrozones" in city_info:
+            for name in args.macrozone_names:
+                name_lower = name.lower()
+                # Try to find the macrozone ID by name
+                if name_lower in city_info["macrozones"]:
+                    macrozone_id = city_info["macrozones"][name_lower]["id"]
+                    if macrozone_id not in macrozones:
+                        macrozones.append(macrozone_id)
+                        logger.info(f"[INFO] Found macrozone ID for '{name}': {macrozone_id}")
+                else:
+                    logger.warning(f"[WARNING] Macrozone '{name}' not found for city {city}")
+        else:
+            logger.warning(f"[WARNING] No macrozones defined for city {city}")
+    
     # Build configuration from args and env vars
     config = {
         "contract_type": args.contract,
         "city": city,
         "comune_id": comune_id,
         "comune_name": comune_name,
+        "macrozones": macrozones,
         "max_pages": max_pages,
         "start_page": args.start_page,
         "output_path": args.output_path,
@@ -615,6 +691,20 @@ def main(args: argparse.Namespace):
         "save_to_json": args.save_json,
         "sqlite_db_path": args.sqlite_path or f"{args.output_path}/ads.db"
     }
+    
+    # Log macrozone information
+    if macrozones:
+        logger.info(f"[INFO] Using macrozone filters: {macrozones}")
+    else:
+        logger.info("[INFO] No macrozone filters applied")
+    
+    # Check if we should just list macrozones
+    if args.list_macrozones:
+        if list_macrozones(city):
+            return pd.DataFrame()  # Return empty DataFrame since we're just listing macrozones
+        else:
+            logger.error(f"[ERROR] Failed to list macrozones for {city}")
+            return pd.DataFrame()
     
     # Create output directory if it doesn't exist
     os.makedirs(config["output_path"], exist_ok=True)

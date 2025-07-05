@@ -41,6 +41,9 @@ This will fetch rental ads for Genova with default settings.
 - `--comune-query`: Search query to find a comune by name (will override --city)
 - `--comune-id`: Specify idComune directly (will override --city and --comune-query)
 - `--comune-name`: Name of the comune when specifying comune-id
+- `--macrozones`: List of macrozone IDs to filter results (e.g., --macrozones 10001 10002)
+- `--macrozone-names`: List of macrozone names to filter results (e.g., --macrozone-names centro foce)
+- `--list-macrozones`: List available macrozones for the selected city and exit
 
 #### Contract and Pagination:
 - `--contract`, `-t`: Contract type: rent or sale (default: rent)
@@ -77,6 +80,21 @@ python fetch_ads.py --comune-id "8042" --comune-name "Milano" --contract rent --
 python fetch_ads.py --city genova --save-csv --save-json --save-sqlite
 ```
 
+#### List available macrozones for a city:
+```bash
+python fetch_ads.py --city genova --list-macrozones
+```
+
+#### Filter by macrozones using IDs:
+```bash
+python fetch_ads.py --city genova --macrozones 10001 10003 --contract rent
+```
+
+#### Filter by macrozones using names:
+```bash
+python fetch_ads.py --city genova --macrozone-names centro castelletto --contract rent
+```
+
 ## Output
 
 The script will output files in the following formats, depending on the command-line arguments:
@@ -89,3 +107,6 @@ The script will output files in the following formats, depending on the command-
 
 - The script uses random delays between requests to avoid being blocked by the server.
 - The script will stop if it reaches the maximum number of pages or if there's an error.
+- Macrozone filtering allows you to narrow down your search to specific areas within a city.
+- Use `--list-macrozones` to see available macrozones for your selected city.
+- For each city, macrozones are defined in `common_cities.json` file.

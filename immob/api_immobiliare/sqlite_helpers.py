@@ -738,6 +738,112 @@ def delete_ads_by_url(db_path: str, urls: List[str]) -> int:
         return 0
 
 
+def get_province_tables(db_path: str) -> List[str]:
+    """
+    Get a list of tables that appear to be province-specific in the SQLite database.
+    
+    Args:
+        db_path: Path to the SQLite database file
+        
+    Returns:
+        List of table names that match province-specific naming pattern
+    """
+    try:
+        if not os.path.exists(db_path):
+            logger.error(f"Database file not found: {db_path}")
+            return []
+            
+        with get_connection(db_path) as conn:
+            cursor = conn.cursor()
+            
+            # Get all tables
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            all_tables = [row['name'] for row in cursor.fetchall()]
+            
+            # Look for tables that follow the naming convention table_name_province
+            province_tables = []
+            for table in all_tables:
+                parts = table.split('_')
+                if len(parts) >= 2:  # At least 2 parts (base name + province)
+                    province_tables.append(table)
+            
+            return province_tables
+            
+    except sqlite3.Error as e:
+        logger.error(f"Error getting province tables: {e}")
+        return []
+
+
+def get_available_provinces(db_path: str, table_name: Optional[str] = None) -> List[str]:
+    """
+    Get a list of provinces available in the database.
+    
+    Args:
+        db_path: Path to the SQLite database file
+        table_name: Optional table name to check for provinces
+                   If None, checks all tables for a province column
+        
+    Returns:
+        List of unique province names in the database
+    """
+    try:
+        if not os.path.exists(db_path):
+            logger.error(f"Database file not found: {db_path}")
+            return []
+            
+        with get_connection(db_path) as conn:
+            cursor = conn.cursor()
+            
+            # Check if we're dealing with province-specific tables
+            province_tables = get_province_tables(db_path)
+            
+            if province_tables:
+                # Extract province names from table names
+                provinces = []
+                for table in province_tables:
+                    parts = table.split('_')
+                    if len(parts) >= 2:
+                        # Assume the last part is the province name
+                        province = parts[-1]
+                        provinces.append(province)
+                return list(set(provinces))  # Return unique provinces
+            
+            # Otherwise, check if the table has a province column
+            if table_name:
+                # Check if the specified table exists and has a province column
+                cursor.execute(f"PRAGMA table_info({table_name})")
+                columns = [column[1] for column in cursor.fetchall()]
+                
+                if 'province' in columns:
+                    cursor.execute(f"SELECT DISTINCT province FROM {table_name} WHERE province IS NOT NULL")
+                    provinces = [row['province'] for row in cursor.fetchall()]
+                    return provinces
+                else:
+                    logger.warning(f"Table {table_name} does not have a province column")
+                    return []
+            else:
+                # Check all tables for a province column
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+                all_tables = [row['name'] for row in cursor.fetchall()]
+                
+                provinces = set()
+                for table in all_tables:
+                    # Check if this table has a province column
+                    cursor.execute(f"PRAGMA table_info({table})")
+                    columns = [column[1] for column in cursor.fetchall()]
+                    
+                    if 'province' in columns:
+                        cursor.execute(f"SELECT DISTINCT province FROM {table} WHERE province IS NOT NULL")
+                        table_provinces = [row['province'] for row in cursor.fetchall()]
+                        provinces.update(table_provinces)
+                
+                return list(provinces)
+            
+    except sqlite3.Error as e:
+        logger.error(f"Error getting available provinces: {e}")
+        return []
+
+
 def get_database_stats(db_path: str) -> Dict[str, Any]:
     """
     Get statistics about the real estate ads database.
@@ -857,4 +963,64 @@ def export_to_csv(
 
 if __name__ == "__main__":
     # Example usage
-    pass
+    import sys
+    
+    if len(sys.argv) < 2:
+        print("Please provide a SQLite database path")
+        print("Usage: python sqlite_helpers.py <db_path> [command]")
+        print("Available commands:")
+        print("  stats - Show database statistics")
+        print("  provinces - Show available provinces")
+        print("  tables - Show tables in the database")
+        sys.exit(1)
+        
+    db_path = sys.argv[1]
+    command = sys.argv[2] if len(sys.argv) > 2 else "stats"
+    
+    if not os.path.exists(db_path):
+        print(f"Database file not found: {db_path}")
+        sys.exit(1)
+    
+    if command == "stats":
+        stats = get_database_stats(db_path)
+        print("Database Statistics:")
+        print(f"- Total records: {stats.get('total_records', 'N/A')}")
+        print(f"- Latest record: {stats.get('latest_record_date', 'N/A')}")
+        
+        if 'top_cities' in stats and stats['top_cities']:
+            print("\nTop Cities:")
+            for city, count in stats['top_cities'].items():
+                print(f"- {city}: {count} records")
+    
+    elif command == "provinces":
+        provinces = get_available_provinces(db_path)
+        print(f"Found {len(provinces)} provinces:")
+        for province in sorted(provinces):
+            print(f"- {province}")
+            
+    elif command == "tables":
+        province_tables = get_province_tables(db_path)
+        
+        with get_connection(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            all_tables = [row['name'] for row in cursor.fetchall()]
+        
+        print(f"Total tables: {len(all_tables)}")
+        if province_tables:
+            print(f"\nProvince-specific tables ({len(province_tables)}):")
+            for table in sorted(province_tables):
+                print(f"- {table}")
+            
+            other_tables = [t for t in all_tables if t not in province_tables]
+            print(f"\nOther tables ({len(other_tables)}):")
+            for table in sorted(other_tables):
+                print(f"- {table}")
+        else:
+            print("\nAll tables:")
+            for table in sorted(all_tables):
+                print(f"- {table}")
+    
+    else:
+        print(f"Unknown command: {command}")
+        print("Available commands: stats, provinces, tables")
