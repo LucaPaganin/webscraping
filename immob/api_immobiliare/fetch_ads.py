@@ -215,8 +215,11 @@ def get_params_mapper(contract_type, comune_id=None, comune_name=None, macrozone
         
         # Add macrozones if provided
         if macrozones and len(macrozones) > 0:
-            params["idMicrozona"] = ",".join(macrozones)
-            params["paramsCount"] += 1
+            # Add each macrozone as separate parameters (idMacrozona[0], idMacrozona[1], etc.)
+            for i, zone_id in enumerate(macrozones):
+                params[f"idMacrozona[{i}]"] = zone_id
+                params["paramsCount"] += 1
+            
             logger.info(f"[INFO] Added macrozones filter: {macrozones}")
         
         return {
@@ -252,8 +255,10 @@ def get_params_mapper(contract_type, comune_id=None, comune_name=None, macrozone
     # If macrozones are provided, add them to the parameters
     if macrozones and len(macrozones) > 0:
         for city_name, params in base_params.items():
-            params["idMicrozona"] = ",".join(macrozones)
-            params["paramsCount"] += 1
+            # Add each macrozone as separate parameters (idMacrozona[0], idMacrozona[1], etc.)
+            for i, zone_id in enumerate(macrozones):
+                params[f"idMacrozona[{i}]"] = zone_id
+                params["paramsCount"] += 1
             
         logger.info(f"[INFO] Added macrozones filter: {macrozones}")
     
