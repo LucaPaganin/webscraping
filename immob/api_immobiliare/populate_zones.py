@@ -9,6 +9,56 @@ import time
 import random
 from pathlib import Path
 
+# Import filter utilities
+try:
+    from filter_utils import filter_items_by_parent
+except ImportError:
+    # Define inline if the module is not available
+    def filter_items_by_parent(items, parent_name=None, parent_type=None, parent_id=None):
+        """
+        Filter items from API response based on parent criteria.
+        
+        Args:
+            items: List of items from API response
+            parent_name: Filter by parent with this name (case-insensitive)
+            parent_type: Filter by parent with this type
+            parent_id: Filter by parent with this ID
+            
+        Returns:
+            List of filtered items
+        """
+        if not items:
+            return []
+            
+        filtered_items = []
+        
+        for item in items:
+            # Skip items without parents
+            if "parents" not in item or not item["parents"]:
+                continue
+                
+            # Check if any parent matches all provided criteria
+            for parent in item["parents"]:
+                matches = True
+                
+                if parent_name is not None:
+                    if "label" not in parent or not parent["label"] or parent["label"].lower() != parent_name.lower():
+                        matches = False
+                        
+                if parent_type is not None:
+                    if "type" not in parent or parent["type"] != parent_type:
+                        matches = False
+                        
+                if parent_id is not None:
+                    if "id" not in parent or parent["id"] != parent_id:
+                        matches = False
+                        
+                if matches:
+                    filtered_items.append(item)
+                    break  # Found matching parent, no need to check others
+        
+        return filtered_items
+
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -50,10 +100,13 @@ def query_zone_data(query, max_level=3, delay_range=(1.0, 2.0)):
     Returns:
         List of zone data entries if successful, empty list otherwise
     """
-    # Sanitize query
-    query = query.replace(' ', '%20')
     
-    url = f"https://www.immobiliare.it/api-next/geography/autocomplete/?query=\"{query}\"&max_level={max_level}"
+    url = f"https://www.immobiliare.it/api-next/geography/autocomplete"
+    
+    params = {
+        'query': query,
+        'max_level': max_level
+    }
     
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -69,7 +122,7 @@ def query_zone_data(query, max_level=3, delay_range=(1.0, 2.0)):
     
     try:
         logger.info(f"Querying API for zones matching '{query}'")
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, params=params)
         
         # Add random delay to avoid rate limiting
         time.sleep(random.uniform(delay_range[0], delay_range[1]))

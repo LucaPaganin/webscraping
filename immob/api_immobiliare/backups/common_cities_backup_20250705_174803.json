@@ -1,0 +1,34 @@
+{
+    "genova": {
+        "idComune": "6846", 
+        "name": "Genova", 
+        "path": "/genova/",
+        "macrozones": {
+            "centro": {"id": "10001", "name": "Centro"},
+            "foce": {"id": "10002", "name": "Foce"},
+            "castelletto": {"id": "10003", "name": "Castelletto"},
+            "marassi": {"id": "10004", "name": "Marassi"},
+            "sampierdarena": {"id": "10005", "name": "Sampierdarena"}
+        }
+    },
+    "vado_ligure": {
+        "idComune": "7051", 
+        "name": "Vado Ligure", 
+        "path": "/vado-ligure/",
+        "macrozones": {
+            "centro": {"id": "20001", "name": "Centro"},
+            "valle": {"id": "20002", "name": "Valle di Vado"}
+        }
+    },
+    "savona": {
+        "idComune": "7043", 
+        "name": "Savona", 
+        "path": "/savona/",
+        "macrozones": {
+            "centro": {"id": "40001", "name": "Centro"},
+            "darsena": {"id": "40002", "name": "Darsena"},
+            "fornaci": {"id": "40003", "name": "Fornaci"},
+            "villapiana": {"id": "40004", "name": "Villapiana"}
+        }
+    }
+}

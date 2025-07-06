@@ -1,44 +1,154 @@
 {
     "genova": {
-        "idComune": "6846", 
-        "name": "Genova", 
+        "idComune": "6846",
+        "name": "Genova",
         "path": "/genova/",
         "macrozones": {
-            "centro": {"id": "10001", "name": "Centro"},
-            "foce": {"id": "10002", "name": "Foce"},
-            "castelletto": {"id": "10003", "name": "Castelletto"},
-            "marassi": {"id": "10004", "name": "Marassi"},
-            "sampierdarena": {"id": "10005", "name": "Sampierdarena"}
+            "centro": {
+                "id": "10001",
+                "name": "Centro"
+            },
+            "foce": {
+                "id": "10002",
+                "name": "Foce"
+            },
+            "castelletto": {
+                "id": "10003",
+                "name": "Castelletto"
+            },
+            "marassi": {
+                "id": "10004",
+                "name": "Marassi"
+            },
+            "sampierdarena": {
+                "id": "10005",
+                "name": "Sampierdarena"
+            }
+        },
+        "zones": {
+            "centro_storico": {
+                "id": "10349",
+                "name": "Centro Storico",
+                "keyurl": "centro-storico"
+            },
+            "pegli_multedo": {
+                "id": "10301",
+                "name": "Pegli, Multedo",
+                "keyurl": "pegli-multedo"
+            },
+            "granarolo_oregina_lagaccio": {
+                "id": "10351",
+                "name": "Granarolo, Oregina, Lagaccio",
+                "keyurl": "granarolo-oregina-lagaccio"
+            },
+            "apparizione_san_desiderio_bavari": {
+                "id": "10258",
+                "name": "Apparizione, San Desiderio, Bavari",
+                "keyurl": "apparizione-san-desiderio-bavari"
+            },
+            "sampierdarena_belvedere_cornigliano": {
+                "id": "10299",
+                "name": "Sampierdarena, Belvedere, Cornigliano",
+                "keyurl": "sampierdarena-belvedere-cornigliano"
+            },
+            "circonvallazione": {
+                "id": "10248",
+                "name": "Circonvallazione",
+                "keyurl": "circonvallazione"
+            },
+            "quarto_quinto_santilario": {
+                "id": "10298",
+                "name": "Quarto, Quinto, Sant'Ilario",
+                "keyurl": "quarto-quinto-sant-ilario"
+            },
+            "molassana_struppa": {
+                "id": "10254",
+                "name": "Molassana, Struppa",
+                "keyurl": "molassana-struppa"
+            },
+            "marassi_san_fruttuoso_quezzi": {
+                "id": "10255",
+                "name": "Marassi, San Fruttuoso, Quezzi",
+                "keyurl": "marassi-san-fruttuoso-quezzi"
+            },
+            "voltri_pra": {
+                "id": "10252",
+                "name": "Voltri, Pra'",
+                "keyurl": "voltri-pra"
+            },
+            "ponente_entroterra": {
+                "id": "10253",
+                "name": "Ponente Entroterra",
+                "keyurl": "ponente-entroterra"
+            },
+            "bolzaneto_pontedecimo_rivarolo_certosa": {
+                "id": "10251",
+                "name": "Bolzaneto, Pontedecimo, Rivarolo, Certosa",
+                "keyurl": "bolzaneto-pontedecimo-rivarolo"
+            },
+            "sestri_ponente_borzoli": {
+                "id": "10250",
+                "name": "Sestri Ponente, Borzoli",
+                "keyurl": "sestri-ponente-borzoli"
+            },
+            "dinegro_san_teodoro": {
+                "id": "10249",
+                "name": "Dinegro, San Teodoro",
+                "keyurl": "dinegro-san-teodoro"
+            },
+            "san_martino_borgoratti": {
+                "id": "10350",
+                "name": "San Martino, Borgoratti",
+                "keyurl": "san-martino-borgoratti"
+            },
+            "albaro_sturla": {
+                "id": "10256",
+                "name": "Albaro, Sturla",
+                "keyurl": "albaro-sturla"
+            },
+            "principe_carmine": {
+                "id": "10352",
+                "name": "Principe, Carmine",
+                "keyurl": "principe-carmine"
+            }
         }
     },
     "vado_ligure": {
-        "idComune": "7051", 
-        "name": "Vado Ligure", 
+        "idComune": "7051",
+        "name": "Vado Ligure",
         "path": "/vado-ligure/",
         "macrozones": {
-            "centro": {"id": "20001", "name": "Centro"},
-            "valle": {"id": "20002", "name": "Valle di Vado"}
-        }
-    },
-    "rapallo": {
-        "idComune": "6887", 
-        "name": "Rapallo", 
-        "path": "/rapallo/",
-        "macrozones": {
-            "centro": {"id": "30001", "name": "Centro"},
-            "san_michele": {"id": "30002", "name": "San Michele di Pagana"},
-            "santa_maria": {"id": "30003", "name": "Santa Maria del Campo"}
+            "centro": {
+                "id": "20001",
+                "name": "Centro"
+            },
+            "valle": {
+                "id": "20002",
+                "name": "Valle di Vado"
+            }
         }
     },
     "savona": {
-        "idComune": "7043", 
-        "name": "Savona", 
+        "idComune": "7043",
+        "name": "Savona",
         "path": "/savona/",
         "macrozones": {
-            "centro": {"id": "40001", "name": "Centro"},
-            "darsena": {"id": "40002", "name": "Darsena"},
-            "fornaci": {"id": "40003", "name": "Fornaci"},
-            "villapiana": {"id": "40004", "name": "Villapiana"}
+            "centro": {
+                "id": "40001",
+                "name": "Centro"
+            },
+            "darsena": {
+                "id": "40002",
+                "name": "Darsena"
+            },
+            "fornaci": {
+                "id": "40003",
+                "name": "Fornaci"
+            },
+            "villapiana": {
+                "id": "40004",
+                "name": "Villapiana"
+            }
         }
     }
 }
