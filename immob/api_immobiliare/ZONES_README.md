@@ -75,7 +75,7 @@ python fetch_ads.py --city genova --list-macrozones
 
 The macrozone parameter is correctly passed to the API as:
 ```
-idMacrozona[0]=10301&idMacrozona[1]=10003
+idMZona[0]=10301&idMZona[1]=10003
 ```
 
 This enables you to filter ads by specific neighborhoods within a city.

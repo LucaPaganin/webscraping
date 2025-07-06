@@ -196,7 +196,7 @@ def get_comune_id_by_name(query):
     logger.warning(f"[WARNING] No comune found for query: {query}")
     return None
 
-def get_params_mapper(contract_type, comune_id=None, comune_name=None, macrozones=None):
+def get_params_mapper(contract_type, comune_id=None, comune_name=None, macrozones=None, region=None):
     """
     Get the parameters mapper for different cities based on contract type.
     
@@ -205,6 +205,7 @@ def get_params_mapper(contract_type, comune_id=None, comune_name=None, macrozone
         comune_id: Optional idComune parameter
         comune_name: Optional name of the comune for path construction
         macrozones: Optional list of macrozone IDs to filter results
+        region: Optional region code (e.g., 'lig' for Liguria)
         
     Returns:
         Dictionary mapping city names to API parameters
@@ -215,12 +216,11 @@ def get_params_mapper(contract_type, comune_id=None, comune_name=None, macrozone
     else:  # sale
         path_start = "vendita-case"
         id_contratto = "1"
-    
-    # If comune_id is provided, create a custom entry for it
+      # If comune_id is provided, create a custom entry for it
     if comune_id and comune_name:
         formatted_name = comune_name.lower().replace(' ', '-')
         params = {
-            "fkRegione": None,  # Will be determined by the API
+            "fkRegione": region,  # Use the provided region if available
             "idNazione": "IT",
             "idComune": comune_id,
             "idContratto": id_contratto,
@@ -233,9 +233,9 @@ def get_params_mapper(contract_type, comune_id=None, comune_name=None, macrozone
         
         # Add macrozones if provided
         if macrozones and len(macrozones) > 0:
-            # Add each macrozone as separate parameters (idMacrozona[0], idMacrozona[1], etc.)
+            # Add each macrozone as separate parameters (idMZona[0], idMZona[1], etc.)
             for i, zone_id in enumerate(macrozones):
-                params[f"idMacrozona[{i}]"] = zone_id
+                params[f"idMZona[{i}]"] = zone_id
                 params["paramsCount"] += 1
             
             logger.info(f"[INFO] Added macrozones filter: {macrozones}")
@@ -273,9 +273,9 @@ def get_params_mapper(contract_type, comune_id=None, comune_name=None, macrozone
     # If macrozones are provided, add them to the parameters
     if macrozones and len(macrozones) > 0:
         for city_name, params in base_params.items():
-            # Add each macrozone as separate parameters (idMacrozona[0], idMacrozona[1], etc.)
+            # Add each macrozone as separate parameters (idMZona[0], idMZona[1], etc.)
             for i, zone_id in enumerate(macrozones):
-                params[f"idMacrozona[{i}]"] = zone_id
+                params[f"idMZona[{i}]"] = zone_id
                 params["paramsCount"] += 1
             
         logger.info(f"[INFO] Added macrozones filter: {macrozones}")
@@ -314,7 +314,7 @@ def get_params_for_zone(contract_type, comune_info, zone_id):
         "pag": 1,
         "paramsCount": 1,  # Start at 1 because we have one zone filter
         "path": f"/{path_start}/{comune_name}/",
-        "idMacrozona[0]": zone_id  # Add the zone ID
+        "idMZona[0]": zone_id  # Add the zone ID
     }
     
     return params
@@ -597,13 +597,13 @@ def process_single_query(city, config):
     
     # Update config with resolved macrozones
     config["macrozones"] = macrozones
-    
-    # Get parameters mapper for the selected contract type
+      # Get parameters mapper for the selected contract type
     params_mapper = get_params_mapper(
         config.get("contract_type", "rent"),
         config.get("comune_id"),
         config.get("comune_name"),
-        macrozones
+        macrozones,
+        config.get("region")
     )
     
     # Get the parameters for the selected city
@@ -860,8 +860,7 @@ def parse_arguments():
                         help='Path where to save the output files (default: current directory)')
     basic_group.add_argument('--log-to-file', action='store_true', default=False,
                         help='Save logs to a timestamped file in addition to console output')
-    
-    # City parameters
+      # City parameters
     city_group = parser.add_argument_group('City parameters (advanced)')
     city_group.add_argument('--comune-query', type=str, default=None,
                         help='Search query to find a comune by name. This will override --city if specified.')
@@ -869,6 +868,8 @@ def parse_arguments():
                         help='Specify idComune directly. Use together with --comune-name. This will override --city and --comune-query if specified.')
     city_group.add_argument('--comune-name', type=str, default=None,
                         help='Name of the comune when specifying comune-id. Required if using --comune-id.')
+    city_group.add_argument('--region', type=str, default=None,
+                        help='Region code for the city (e.g., "lig" for Liguria). Used to set fkRegione in API parameters.')
     
     # Zone parameters
     zone_group = parser.add_argument_group('Zone parameters')
@@ -969,13 +970,13 @@ def main():
             logger.info(f"[INFO] Found comune: {comune_name} (ID: {comune_id})")
         else:
             logger.warning(f"[WARNING] Comune not found for query: {args.comune_query}. Using default city: {city}")
-    
-    # Build configuration from args and env vars
+      # Build configuration from args and env vars
     config = {
         "contract_type": args.contract,
         "city": city,
         "comune_id": comune_id,
         "comune_name": comune_name,
+        "region": args.region,
         "macrozones": args.macrozones,
         "macrozone_names": args.macrozone_names,
         "max_pages": max_pages,
@@ -998,14 +999,15 @@ def main():
         "use_zones": args.use_zones,
         "delay_range": (2.5, 5.0)  # Default delay between requests
     }
-    
-    # Log the run configuration
+      # Log the run configuration
     logger.info(f"[CONFIG] City: {city}")
     logger.info(f"[CONFIG] Contract type: {config['contract_type']}")
     logger.info(f"[CONFIG] Processing mode: {'zone-by-zone' if args.use_zones else 'single query'}")
     logger.info(f"[CONFIG] Maximum pages: {max_pages if max_pages is not None else 'All'}")
     logger.info(f"[CONFIG] Output path: {config['output_path']}")
     
+    if config['region']:
+        logger.info(f"[CONFIG] Region: {config['region']}")
     if config['macrozones']:
         logger.info(f"[CONFIG] Using macrozone filters: {config['macrozones']}")
     if config['macrozone_names']:

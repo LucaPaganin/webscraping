@@ -86,5 +86,31 @@
                 "order": 1
             }
         },
+        {            "name": "[immobit]: fetch_immobiliare_ads.py (Genova zones)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/immob/api_immobiliare/fetch_immobiliare_ads.py",
+            "args": [
+                "--use-zones",
+                "--city", "genova",
+                "--comune-query", "genova",
+                "--contract", "sale",
+                "--max-pages", "0",
+                "--save-json",
+                "--save-csv",
+                "--output-path", "${workspaceFolder}/immob/api_immobiliare/data",
+                "--log-to-file",
+                "--region", "lig"
+            ],
+            "cwd": "${workspaceFolder}/immob/api_immobiliare",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/"
+            },
+            "presentation": {
+                "group": "Immobit",
+                "order": 3
+            }
+        }
     ]
 }
