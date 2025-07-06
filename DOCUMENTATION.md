@@ -72,3 +72,50 @@ def fetch_ads(area_params, base_url, headers=None, cookies=None, max_pages=None)
     """
     # Function implementation
 ```
+
+## Recent Major Updates
+
+### OOP Refactoring (2024)
+
+The `fetch_immobiliare_ads.py` module has been completely refactored to use an **Object-Oriented Programming (OOP)** paradigm, providing significant improvements:
+
+#### New Architecture Components
+
+- **`RealEstateAd`**: Standardized Pydantic model for all real estate data
+- **`RealEstateAdRetriever`**: Abstract base class for data retrieval
+- **`ImmobiliareAdRetriever`**: Concrete implementation for immobiliare.it
+- **`RealEstateDataManager`**: Coordinator for data collection and storage
+
+#### Key Benefits
+
+- **Extensibility**: Easy to add support for new real estate websites
+- **Maintainability**: Clear separation of concerns with SOLID principles
+- **Standardization**: Unified data model across all sources
+- **Reliability**: Robust error handling and retry mechanisms
+- **Flexibility**: Multiple storage options (CSV, JSON, SQLite, Cosmos DB)
+
+#### Documentation Updates
+
+The documentation has been comprehensively updated to reflect the new OOP structure:
+
+- Updated module docstrings with class hierarchies and relationships
+- Added detailed API documentation for all new classes and methods
+- Provided usage examples for both programmatic and CLI interfaces
+- Created architectural diagrams and design pattern explanations
+- Updated README with modern features and extension guidelines
+
+#### Migration Guide
+
+The new OOP system maintains backward compatibility for CLI usage while providing enhanced programmatic interfaces:
+
+```python
+# Old procedural approach (deprecated)
+# Direct function calls with complex parameter handling
+
+# New OOP approach (recommended)
+from fetch_immobiliare_ads import ImmobiliareAdRetriever, RealEstateDataManager
+
+retriever = ImmobiliareAdRetriever(config)
+data_manager = RealEstateDataManager(retriever, config)
+ads = data_manager.collect_ads(city='genova', contract_type='sale')
+```
