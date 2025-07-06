@@ -1,13 +1,25 @@
 #!/usr/bin/env python3
 """
-Real Estate Data Collection CLI
-==============================
+Real Estate Data Collection CLI (DEPRECATED)
+==========================================
 
-Command-line interface for the object-oriented real estate data collection system.
+DEPRECATED: This file is maintained for backward compatibility only.
+Please use fetch_ads_cli.py instead which provides the same functionality
+with a more consistent interface.
+
+This file will be removed in a future release.
 
 Author: Lucas P
 Date: July 6, 2025
 """
+
+import warnings
+warnings.warn(
+    "main.py is deprecated and will be removed in a future release. "
+    "Please use fetch_ads_cli.py instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import argparse
 import sys

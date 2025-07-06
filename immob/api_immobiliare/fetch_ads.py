@@ -1,4 +1,20 @@
 # --- fetch_ads.py ---
+# DEPRECATED: This file is maintained for backward compatibility only.
+# Please use the new modular structure instead:
+# - fetch_ads_cli.py: Command-line interface
+# - retrievers.py: Classes for data retrieval
+# - data_manager.py: Data management and storage
+# - upload_data.py: Batch upload utilities
+#
+# This file will be removed in a future release.
+
+import warnings
+warnings.warn(
+    "fetch_ads.py is deprecated and will be removed in a future release. "
+    "Please use the new modular structure with fetch_ads_cli.py instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import requests
 import time

@@ -165,6 +165,22 @@ class RealEstateAd:
 - **SQLite**: For local database operations
 - **Azure Cosmos DB**: For cloud-scale applications
 
+### ✅ Advanced Feature Engineering
+- **Text-Based Features**: Extract insights from property descriptions
+- **Geographic Features**: Location-based insights and neighborhood analysis
+- **Time-Based Features**: Temporal patterns and seasonality
+- **Price Trend Analysis**: Historical price trends and market dynamics
+- **Sentiment Analysis**: Property description sentiment evaluation
+- **Energy Efficiency Features**: Energy class impact analysis
+- **Neighborhood Clustering**: Automated micro-market identification
+- **External Data Integration**: Census data, POIs, and other contextual information
+
+### ✅ Model Building & Optimization
+- **Model Registry**: Version control for trained models
+- **Hyperparameter Optimization**: Automated model tuning
+- **Feature Importance Analysis**: Identify key value drivers
+- **Performance Evaluation**: Comprehensive metrics and analysis
+
 ### ✅ Robust Error Handling
 - Retry logic with exponential backoff
 - Graceful degradation on API failures
@@ -175,6 +191,92 @@ class RealEstateAd:
 - Comprehensive docstrings
 - Configurable via environment variables
 - Command-line interface with extensive options
+
+## 🧠 Advanced Feature Engineering
+
+The system includes advanced feature engineering capabilities through two key modules:
+
+### `advanced_features.py`
+
+Provides basic feature extraction transformers:
+
+- `DescriptionFeatureExtractor`: Extracts binary features from property descriptions
+- `GeographicFeatureTransformer`: Creates features from geographic coordinates
+- `TimeFeatureTransformer`: Generates features from date fields
+- `TextVectorizerTransformer`: Converts descriptions to vector representations
+
+### `enhanced_features.py`
+
+Extends the basic transformers with more sophisticated feature engineering:
+
+- `PriceTrendAnalyzer`: Analyzes historical price data to extract trends and volatility metrics
+- `NeighborhoodClusterer`: Groups properties into micro-markets using unsupervised learning
+- `SentimentAnalysisTransformer`: Performs sentiment analysis on property descriptions
+- `EnergyEfficiencyTransformer`: Extracts and transforms energy efficiency information
+- `ExternalDataEnricher`: Integrates external data sources like census data and POIs
+
+### Example Usage
+
+```python
+from enhanced_features import (
+    PriceTrendAnalyzer,
+    NeighborhoodClusterer,
+    create_enhanced_feature_pipeline
+)
+
+# Create individual transformers
+price_analyzer = PriceTrendAnalyzer()
+neighborhood_clusterer = NeighborhoodClusterer(n_clusters=10)
+
+# Or use the complete pipeline
+pipeline = create_enhanced_feature_pipeline(
+    include_price_trends=True,
+    include_neighborhoods=True,
+    include_sentiment=True,
+    include_energy=True,
+    n_clusters=10
+)
+
+# Transform your data
+enhanced_features = pipeline.fit_transform(df)
+```
+
+Check out the `examples/enhanced_feature_engineering.ipynb` notebook for comprehensive examples.
+
+## 📊 Model Management
+
+The system includes tools for model management and hyperparameter optimization:
+
+### `model_utils.py`
+
+- `ModelRegistry`: Manages trained models with version control and metadata
+- `HyperparameterOptimizer`: Automates model tuning via grid search or randomized search
+
+### Example Usage
+
+```python
+from model_utils import ModelRegistry, HyperparameterOptimizer
+
+# Save a trained model
+registry = ModelRegistry(registry_path='models')
+model_id = registry.save_model(
+    model=trained_model,
+    model_name='price_prediction',
+    feature_names=feature_names,
+    metrics={'rmse': 50000, 'r2': 0.85}
+)
+
+# Load the best model
+best_model_id = registry.get_best_model('price_prediction', metric='r2')
+best_model, metadata = registry.load_model(best_model_id)
+
+# Optimize hyperparameters
+optimizer = HyperparameterOptimizer(
+    pipeline=model_pipeline,
+    param_grid=param_grid
+)
+results = optimizer.randomized_search(X_train, y_train)
+```
 
 ## 🏢 Adding New Real Estate Websites
 
@@ -256,6 +358,42 @@ affordable_ads = [
 data_manager.save_to_json(affordable_ads, 'affordable_rentals.json')
 ```
 
+### Feature Engineering and Model Training
+
+```python
+import pandas as pd
+from enhanced_features import create_enhanced_feature_pipeline
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+
+# Load collected data
+ads_df = pd.DataFrame([ad.__dict__ for ad in ads])
+
+# Create feature pipeline
+pipeline = create_enhanced_feature_pipeline(
+    include_price_trends=True,
+    include_neighborhoods=True,
+    include_sentiment=True
+)
+
+# Generate features
+features = pipeline.fit_transform(ads_df)
+
+# Train a model
+X = features
+y = ads_df['price']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+model = RandomForestRegressor(n_estimators=100)
+model.fit(X_train, y_train)
+
+# Save model using the registry
+from model_utils import ModelRegistry
+registry = ModelRegistry()
+registry.save_model(model, 'price_prediction', X.columns.tolist(), 
+                   {'r2': model.score(X_test, y_test)})
+```
+
 ### Batch Processing Multiple Cities
 
 ```python
@@ -296,6 +434,10 @@ pandas>=2.0.0
 pydantic>=2.0.0
 azure-cosmos>=4.5.0
 python-dotenv>=1.0.0
+scikit-learn>=1.0.0
+matplotlib>=3.5.0
+seaborn>=0.12.0
+joblib>=1.1.0
 ```
 
 ## 🔮 Future Roadmap
@@ -303,7 +445,7 @@ python-dotenv>=1.0.0
 - [ ] Support for additional websites (Casa.it, Subito.it)
 - [ ] Advanced filtering options (price ranges, property features)
 - [ ] Real-time monitoring and change detection
-- [ ] Machine learning integration for price prediction
+- [x] Machine learning integration for price prediction
 - [ ] REST API for data access
 - [ ] Parallel processing for faster data collection
 - [ ] Data quality validation and enrichment

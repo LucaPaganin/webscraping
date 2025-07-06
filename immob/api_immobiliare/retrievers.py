@@ -21,6 +21,17 @@ from typing import Dict, List, Optional, Any, Tuple
 
 from real_estate_models import RealEstateAd
 
+# Define a list of deprecated files that will be removed in future releases
+DEPRECATED_FILES = [
+    'fetch_ads.py',
+    'main.py',
+    'models.py',
+    'fetch_immobiliare_ads_backup.py',
+    'fetch_immobiliare_ads_new.py',
+    'fetch_immobiliare_ads_original.py',
+    'fetch_immobiliare_ads_wrapper.py'
+]
+
 
 class RealEstateAdRetriever(ABC):
     """

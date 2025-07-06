@@ -1,3 +1,18 @@
+# --- models.py ---
+# DEPRECATED: This file is maintained for backward compatibility only.
+# Please use real_estate_models.py instead which provides a more comprehensive
+# data model with better validation and standardization.
+#
+# This file will be removed in a future release.
+
+import warnings
+warnings.warn(
+    "models.py is deprecated and will be removed in a future release. "
+    "Please use real_estate_models.py instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
 from datetime import datetime
 from typing import List, Dict, Optional, Any, Union
 from pydantic import BaseModel, Field, field_validator  # importato field_validator invece di validator
