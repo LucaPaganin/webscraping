@@ -1,0 +1,164 @@
+[
+  {
+    "file": "C:\\Users\\lucap\\code\\webscraping\\immob\\api_immobiliare\\data\\ads_genova_albaro__sturla_sale_20250706_123857.csv",
+    "total_records": 428,
+    "successful": 428,
+    "failed": 0,
+    "start_time": "2025-07-06 13:51:55.307620",
+    "end_time": "2025-07-06 13:51:55.662871",
+    "errors": []
+  },
+  {
+    "file": "C:\\Users\\lucap\\code\\webscraping\\immob\\api_immobiliare\\data\\ads_genova_apparizione__san_desiderio__bavari_sale_20250706_122136.csv",
+    "total_records": 78,
+    "successful": 78,
+    "failed": 0,
+    "start_time": "2025-07-06 13:51:55.663876",
+    "end_time": "2025-07-06 13:51:55.763611",
+    "errors": []
+  },
+  {
+    "file": "C:\\Users\\lucap\\code\\webscraping\\immob\\api_immobiliare\\data\\ads_genova_bolzaneto__pontedecimo__rivarolo__certosa_sale_20250706_123405.csv",
+    "total_records": 804,
+    "successful": 804,
+    "failed": 0,
+    "start_time": "2025-07-06 13:51:55.764619",
+    "end_time": "2025-07-06 13:51:56.318715",
+    "errors": []
+  },
+  {
+    "file": "C:\\Users\\lucap\\code\\webscraping\\immob\\api_immobiliare\\data\\ads_genova_centro_storico_sale_20250706_121911.csv",
+    "total_records": 267,
+    "successful": 267,
+    "failed": 0,
+    "start_time": "2025-07-06 13:51:56.319710",
+    "end_time": "2025-07-06 13:51:56.568083",
+    "errors": []
+  },
+  {
+    "file": "C:\\Users\\lucap\\code\\webscraping\\immob\\api_immobiliare\\data\\ads_genova_circonvallazione_sale_20250706_122520.csv",
+    "total_records": 427,
+    "successful": 427,
+    "failed": 0,
+    "start_time": "2025-07-06 13:51:56.569088",
+    "end_time": "2025-07-06 13:51:56.910647",
+    "errors": []
+  },
+  {
+    "file": "C:\\Users\\lucap\\code\\webscraping\\immob\\api_immobiliare\\data\\ads_genova_dinegro__san_teodoro_sale_20250706_123700.csv",
+    "total_records": 232,
+    "successful": 232,
+    "failed": 0,
+    "start_time": "2025-07-06 13:51:56.912647",
+    "end_time": "2025-07-06 13:51:57.122472",
+    "errors": []
+  },
+  {
+    "file": "C:\\Users\\lucap\\code\\webscraping\\immob\\api_immobiliare\\data\\ads_genova_granarolo__oregina__lagaccio_sale_20250706_122113.csv",
+    "total_records": 210,
+    "successful": 210,
+    "failed": 0,
+    "start_time": "2025-07-06 13:51:57.123475",
+    "end_time": "2025-07-06 13:51:57.330846",
+    "errors": []
+  },
+  {
+    "file": "C:\\Users\\lucap\\code\\webscraping\\immob\\api_immobiliare\\data\\ads_genova_marassi__san_fruttuoso__quezzi_sale_20250706_123024.csv",
+    "total_records": 858,
+    "successful": 858,
+    "failed": 0,
+    "start_time": "2025-07-06 13:51:57.331843",
+    "end_time": "2025-07-06 13:51:57.942531",
+    "errors": []
+  },
+  {
+    "file": "C:\\Users\\lucap\\code\\webscraping\\immob\\api_immobiliare\\data\\ads_genova_molassana__struppa_sale_20250706_122805.csv",
+    "total_records": 431,
+    "successful": 431,
+    "failed": 0,
+    "start_time": "2025-07-06 13:51:57.943533",
+    "end_time": "2025-07-06 13:51:58.249644",
+    "errors": []
+  },
+  {
+    "file": "C:\\Users\\lucap\\code\\webscraping\\immob\\api_immobiliare\\data\\ads_genova_pegli__multedo_sale_20250706_122031.csv",
+    "total_records": 406,
+    "successful": 406,
+    "failed": 0,
+    "start_time": "2025-07-06 13:51:58.250644",
+    "end_time": "2025-07-06 13:51:58.553719",
+    "errors": []
+  },
+  {
+    "file": "C:\\Users\\lucap\\code\\webscraping\\immob\\api_immobiliare\\data\\ads_genova_ponente_entroterra_sale_20250706_123148.csv",
+    "total_records": 48,
+    "successful": 48,
+    "failed": 0,
+    "start_time": "2025-07-06 13:51:58.555716",
+    "end_time": "2025-07-06 13:51:58.619994",
+    "errors": []
+  },
+  {
+    "file": "C:\\Users\\lucap\\code\\webscraping\\immob\\api_immobiliare\\data\\ads_genova_principe__carmine_sale_20250706_123921.csv",
+    "total_records": 108,
+    "successful": 108,
+    "failed": 0,
+    "start_time": "2025-07-06 13:51:58.621997",
+    "end_time": "2025-07-06 13:51:58.741447",
+    "errors": []
+  },
+  {
+    "file": "C:\\Users\\lucap\\code\\webscraping\\immob\\api_immobiliare\\data\\ads_genova_quarto__quinto__santilario_sale_20250706_122643.csv",
+    "total_records": 493,
+    "successful": 493,
+    "failed": 0,
+    "start_time": "2025-07-06 13:51:58.742445",
+    "end_time": "2025-07-06 13:51:59.095284",
+    "errors": []
+  },
+  {
+    "file": "C:\\Users\\lucap\\code\\webscraping\\immob\\api_immobiliare\\data\\ads_genova_sale_20250706_123925.csv",
+    "total_records": 6966,
+    "successful": 6966,
+    "failed": 0,
+    "start_time": "2025-07-06 13:51:59.096282",
+    "end_time": "2025-07-06 13:52:04.563860",
+    "errors": []
+  },
+  {
+    "file": "C:\\Users\\lucap\\code\\webscraping\\immob\\api_immobiliare\\data\\ads_genova_sampierdarena__belvedere__cornigliano_sale_20250706_122358.csv",
+    "total_records": 810,
+    "successful": 810,
+    "failed": 0,
+    "start_time": "2025-07-06 13:52:04.566034",
+    "end_time": "2025-07-06 13:52:05.167206",
+    "errors": []
+  },
+  {
+    "file": "C:\\Users\\lucap\\code\\webscraping\\immob\\api_immobiliare\\data\\ads_genova_san_martino__borgoratti_sale_20250706_123739.csv",
+    "total_records": 210,
+    "successful": 210,
+    "failed": 0,
+    "start_time": "2025-07-06 13:52:05.168203",
+    "end_time": "2025-07-06 13:52:05.354225",
+    "errors": []
+  },
+  {
+    "file": "C:\\Users\\lucap\\code\\webscraping\\immob\\api_immobiliare\\data\\ads_genova_sestri_ponente__borzoli_sale_20250706_123617.csv",
+    "total_records": 779,
+    "successful": 779,
+    "failed": 0,
+    "start_time": "2025-07-06 13:52:05.355220",
+    "end_time": "2025-07-06 13:52:05.975404",
+    "errors": []
+  },
+  {
+    "file": "C:\\Users\\lucap\\code\\webscraping\\immob\\api_immobiliare\\data\\ads_genova_voltri__pra_sale_20250706_123133.csv",
+    "total_records": 377,
+    "successful": 377,
+    "failed": 0,
+    "start_time": "2025-07-06 13:52:05.976405",
+    "end_time": "2025-07-06 13:52:06.412716",
+    "errors": []
+  }
+]
