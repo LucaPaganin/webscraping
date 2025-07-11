@@ -1,0 +1,11 @@
+[
+  {
+    "file": "C:\\Users\\lucap\\code\\webscraping\\immob\\api_immobiliare\\data\\ads_genova_sale_20250706_123925.csv",
+    "total_records": 6966,
+    "successful": 6966,
+    "failed": 0,
+    "start_time": "2025-07-06 13:56:26.403386",
+    "end_time": "2025-07-06 14:01:23.492034",
+    "errors": []
+  }
+]

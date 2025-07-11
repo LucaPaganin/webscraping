@@ -50,18 +50,20 @@
             }
         },
         {
-            "name": "[immobit]: upload_csv_to_cosmos.py",
+            "name": "[immobit]: upload_csv_to_db.py",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/immob/api_immobiliare/upload_csv_to_cosmos.py",
+            "program": "${workspaceFolder}/immob/api_immobiliare/upload_csv_to_db.py",
             "cwd": "${workspaceFolder}/immob/api_immobiliare",
             "justMyCode": false,
             "args": [
-                "--container", "ads_rent",
+                "--container", "ads_sale",
                 "--city", "genova",
                 "--batch-size", "50",
                 "--report",
-                "${workspaceFolder}/immob/api_immobiliare/ads_genova_rent.csv"
+                "${workspaceFolder}/immob/api_immobiliare/data/ads_genova_sale_20250706_123925.csv",
+                "--cosmos",
+                // "--sqlite", "${env:USERPROFILE}/onedrive_unige/data/immobiliare.it/ads.db"
             ],
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/"
@@ -86,5 +88,31 @@
                 "order": 1
             }
         },
+        {            "name": "[immobit]: fetch_immobiliare_ads.py (Genova zones)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/immob/api_immobiliare/fetch_immobiliare_ads.py",
+            "args": [
+                "--use-zones",
+                "--city", "genova",
+                "--comune-query", "genova",
+                "--contract", "sale",
+                "--max-pages", "0",
+                "--save-json",
+                "--save-csv",
+                "--output-path", "${workspaceFolder}/immob/api_immobiliare/data",
+                "--log-to-file",
+                "--region", "lig"
+            ],
+            "cwd": "${workspaceFolder}/immob/api_immobiliare",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/"
+            },
+            "presentation": {
+                "group": "Immobit",
+                "order": 3
+            }
+        }
     ]
 }

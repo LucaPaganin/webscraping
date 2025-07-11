@@ -141,7 +141,7 @@ def get_params_for_zone(contract_type, comune_info, zone_id):
         "pag": 1,
         "paramsCount": 1,  # Start at 1 because we have one zone filter
         "path": f"/{path_start}/{comune_name}/",
-        "idMacrozona[0]": zone_id  # Add the zone ID
+        "idMZona[0]": zone_id  # Add the zone ID
     }
     
     return params

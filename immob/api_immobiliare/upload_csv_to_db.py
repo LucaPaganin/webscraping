@@ -296,13 +296,70 @@ def upload_csv_to_sqlite(csv_path, table_name, db_path, batch_size=100, if_exist
     
     return results
 
+
+def process_csv_file(csv_path, args, config, all_results, success_count):
+    filename = csv_path.stem  # Get filename without extension
+    # Handle uploading based on selected database type
+    if args.cosmos:
+        # Determine container name if not explicitly provided
+        container_name = args.container
+        if not container_name:
+            # Try to extract container name from filename, example: ads_genova_rent.csv
+            parts = filename.split('_')
+            if len(parts) > 2 and parts[0] == 'ads':
+                contract_type = parts[2]  # Assuming format is ads_CITY_CONTRACT.csv
+                container_name = f"ads_{contract_type}"
+                logger.info(f"[INFO] Using container name '{container_name}' derived from filename")
+            else:
+                raise ValueError(
+                    "[ERROR] Could not determine container name from filename. "
+                    "Please provide a valid container name using --container option."
+                )
+        
+        # Upload CSV file to Cosmos DB
+        logger.info(f"[INFO] Processing file: {csv_path}")
+        logger.info(f"[INFO] Target Cosmos DB container: {container_name}")
+        
+        result = upload_csv_to_cosmos(
+            csv_path=csv_path,
+            container_name=container_name,
+            config=config,
+            city=args.city,
+            batch_size=args.batch_size
+        )
+    
+    else:  # SQLite
+        # Determine table name if not explicitly provided
+        table_name = args.table
+        if not table_name:
+            # Try to use the filename as the table name (without extension)
+            table_name = filename.replace('-', '_')  # Replace hyphens with underscores
+            logger.info(f"[INFO] Using table name '{table_name}' derived from filename")
+        
+        # Upload CSV file to SQLite
+        logger.info(f"[INFO] Processing file: {csv_path}")
+        logger.info(f"[INFO] Target SQLite table: {table_name}")
+        
+        result = upload_csv_to_sqlite(
+            csv_path=csv_path,
+            table_name=table_name,
+            db_path=args.sqlite,
+            batch_size=args.batch_size,
+            if_exists=args.if_exists
+        )
+    
+    all_results.append(result)
+    if result["successful"] > 0:
+        success_count += 1
+
+
 def parse_arguments():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description='Upload CSV files to Cosmos DB or SQLite')
     
     # Required arguments
     parser.add_argument('csv_files', nargs='+', type=str,
-                        help='Path(s) to CSV file(s) to upload')
+                        help='Path(s) to CSV file(s) to upload. If it is a directory, all CSV files in that directory will be processed.')
     
     # Database selection arguments
     db_group = parser.add_mutually_exclusive_group(required=True)
@@ -340,6 +397,7 @@ def main():
     # Process each CSV file
     all_results = []
     success_count = 0
+    config = {}
     
     # Check if we're using Cosmos DB
     if args.cosmos:
@@ -360,64 +418,23 @@ def main():
     # Process each CSV file
     for csv_path in args.csv_files:
         if not os.path.exists(csv_path):
-            logger.error(f"[ERROR] File not found: {csv_path}")
+            logger.error(f"[ERROR] File or directory not found: {csv_path}")
             continue
         
-        filename = Path(csv_path).stem  # Get filename without extension
-        
-        # Handle uploading based on selected database type
-        if args.cosmos:
-            # Determine container name if not explicitly provided
-            container_name = args.container
-            if not container_name:
-                # Try to extract container name from filename, example: ads_genova_rent.csv
-                parts = filename.split('_')
-                if len(parts) > 2 and parts[0] == 'ads':
-                    contract_type = parts[2]  # Assuming format is ads_CITY_CONTRACT.csv
-                    container_name = f"ads_{contract_type}"
-                    logger.info(f"[INFO] Using container name '{container_name}' derived from filename")
+        csv_path = Path(csv_path)
+
+        if csv_path.is_file():
+            process_csv_file(csv_path, args, config, all_results, success_count)
+        elif csv_path.is_dir():
+            # Process all CSV files in the directory
+            for file in csv_path.glob('*.csv'):
+                if file.is_file():
+                    process_csv_file(file, args, config, all_results, success_count)
                 else:
-                    raise ValueError(
-                        "[ERROR] Could not determine container name from filename. "
-                        "Please provide a valid container name using --container option."
-                    )
-            
-            # Upload CSV file to Cosmos DB
-            logger.info(f"[INFO] Processing file: {csv_path}")
-            logger.info(f"[INFO] Target Cosmos DB container: {container_name}")
-            
-            result = upload_csv_to_cosmos(
-                csv_path=csv_path,
-                container_name=container_name,
-                config=config,
-                city=args.city,
-                batch_size=args.batch_size
-            )
-        
-        else:  # SQLite
-            # Determine table name if not explicitly provided
-            table_name = args.table
-            if not table_name:
-                # Try to use the filename as the table name (without extension)
-                table_name = filename.replace('-', '_')  # Replace hyphens with underscores
-                logger.info(f"[INFO] Using table name '{table_name}' derived from filename")
-            
-            # Upload CSV file to SQLite
-            logger.info(f"[INFO] Processing file: {csv_path}")
-            logger.info(f"[INFO] Target SQLite table: {table_name}")
-            
-            result = upload_csv_to_sqlite(
-                csv_path=csv_path,
-                table_name=table_name,
-                db_path=args.sqlite,
-                batch_size=args.batch_size,
-                if_exists=args.if_exists
-            )
-        
-        all_results.append(result)
-        if result["successful"] > 0:
-            success_count += 1
-    
+                    logger.warning(f"[WARNING] Skipping non-file entry: {file}")
+        else:
+            logger.error(f"[ERROR] Invalid path: {csv_path}. It must be a CSV file or directory containing CSV files.")
+
     # Print summary
     logger.info("\n[SUMMARY]")
     logger.info(f"Total files processed: {len(args.csv_files)}")
